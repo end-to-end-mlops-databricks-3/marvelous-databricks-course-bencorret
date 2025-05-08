@@ -11,6 +11,7 @@ targets:
     default: true
     workspace:
       host: https://dbc-c2e8445d-159d.cloud.databricks.com
+      file_path: /Workspace/Users/corretconseil@outlook.com/marvelous-databricks-course-bencorret
 
   ## Optionally, there could be 'staging' or 'prod' targets here.
   #

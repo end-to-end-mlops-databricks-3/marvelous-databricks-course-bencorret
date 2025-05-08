@@ -12,7 +12,7 @@ schema = StructType(
         StructField("country", StringType(), True),
     ]
 )
-
+# comment from VSCode
 # COMMAND ----------
 data = [
     ("1", "Alice", 30, "New York", "USA"),
