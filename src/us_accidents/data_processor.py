@@ -12,6 +12,9 @@ class DataProcessor():
         self.dataframe = dataframe
         self.config = config  # Store the configuration
         self.spark = spark
+        self.clean_df_address = f"{self.config.catalog_name}.{self.config.schema_name}.{self.config.cleaned_table_name}"
+        self.training_set_address = f"{self.config.catalog_name}.{self.config.schema_name}.train_set"
+        self.test_set_address = f"{self.config.catalog_name}.{self.config.schema_name}.test_set"
     
     
     def preprocess(self) -> None:
@@ -119,7 +122,10 @@ class DataProcessor():
                             'Sunrise_Sunset', 'Civil_Twilight', 'Nautical_Twilight', 'Astronomical_Twilight'])
         
         # 4 - Create instance variable with cleaned DataFrame
-        self.clean_df = clean_df
+        clean_df_with_timestamp = clean_df.withColumn(
+            "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
+        )
+        clean_df_with_timestamp.write.mode("overwrite").saveAsTable(self.clean_df_address)
         
     
     def split_data(self, test_size: float = 0.2, seed: int = 42) -> tuple[DataFrame, DataFrame]:
@@ -131,19 +137,17 @@ class DataProcessor():
         """
         # Calculate the weights for train and test splits
         train_size = 1.0 - test_size
-        train_df, test_df = self.clean_df.randomSplit([train_size, test_size], seed=seed)
+        cleaned_table = self.spark.read.table(self.clean_df_address)
+        train_df, test_df = cleaned_table.randomSplit([train_size, test_size], seed=seed)
         return train_df, test_df
 
     
     def save_to_catalog(self, train_set: DataFrame, test_set: DataFrame) -> None:
-        """Save the cleaned data + train and test sets into Databricks tables.
+        """Save the train and test sets into Databricks tables.
 
         :param train_set: The training DataFrame to be saved.
         :param test_set: The test DataFrame to be saved.
         """
-        clean_df_with_timestamp = self.clean_df.withColumn(
-            "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
-        )
         train_set_with_timestamp = train_set.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
@@ -151,15 +155,8 @@ class DataProcessor():
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
         
-        clean_df_with_timestamp.write.mode("overwrite").saveAsTable(
-            f"{self.config.catalog_name}.{self.config.schema_name}.{self.config.cleaned_table_name}"
-        )
-        train_set_with_timestamp.write.mode("overwrite").saveAsTable(
-            f"{self.config.catalog_name}.{self.config.schema_name}.train_set"
-        )
-        test_set_with_timestamp.write.mode("overwrite").saveAsTable(
-            f"{self.config.catalog_name}.{self.config.schema_name}.test_set"
-        )
+        train_set_with_timestamp.write.mode("overwrite").saveAsTable(self.training_set_address)
+        test_set_with_timestamp.write.mode("overwrite").saveAsTable(self.test_set_address)
 
     
     def enable_change_data_feed(self) -> None:
