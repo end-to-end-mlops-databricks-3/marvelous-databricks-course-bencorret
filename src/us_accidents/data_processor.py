@@ -1,25 +1,40 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, when, lower, lit
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql.functions import col, current_timestamp, lit, lower, to_utc_timestamp, when
 
 from us_accidents.config import ProjectConfig
-from pyspark.sql.functions import to_utc_timestamp, current_timestamp
-import pandas as pd
-from sklearn.model_selection import train_test_split
 
-class DataProcessor():
+
+class DataProcessor:
+    """A class for preprocessing and managing DataFrame operations.
+
+    This class handles data preprocessing, splitting, and saving to Databricks tables.
+    """
+    
     def __init__(self, spark: SparkSession, config: ProjectConfig, dataframe: DataFrame) -> None:
         self.dataframe = dataframe
-        self.config = config  # Store the configuration
+        self.config = config
         self.spark = spark
         self.clean_df_address = f"{self.config.catalog_name}.{self.config.schema_name}.{self.config.cleaned_table_name}"
         self.training_set_address = f"{self.config.catalog_name}.{self.config.schema_name}.train_set"
         self.test_set_address = f"{self.config.catalog_name}.{self.config.schema_name}.test_set"
-    
-    
+
     def preprocess(self) -> None:
-        
-        # 1 - We arbitrarily choose one source only. Different websites / databases use different collection and classification methodologies. 
+        """Clean raw dataset, to make it ready for training and testing.
+        This method performs the following steps:
+        1. Selects relevant columns and filters the dataset based on the source.
+        2. Cleans and transforms the data, including handling missing values and converting data types.
+        3. Creates new features based on existing data.
+        4. Saves the cleaned DataFrame to a Delta table in the specified catalog and schema.
+        """
+        # Features 'ID' doesn't provide any useful information about accidents themselves.
+        # 'TMC', 'Distance(mi)', 'End_Time' (we have start time), 'Duration', 'End_Lat', and 'End_Lng'(we have start location)
+        # can be collected only after the accident has already happened and hence cannot be predictors
+        # for serious accident prediction.
+        # For 'Description', the POI features have already been extracted from it by dataset creators.
+        # 'Country' and 'Turning_Loop' dropped too, for they have only one class.
+        # More than 60% percent of 'Number', 'Wind_Chill(F)' is missing; we drop these columns too.
+
+        # 1 - We arbitrarily choose one source only. Different websites / databases use different collection and classification methodologies.
         # We will focus on the source offering the most data: Source1
         self.dataframe.createOrReplaceTempView("raw_accidents")
         clean_df = self.spark.sql("""
@@ -36,7 +51,7 @@ class DataProcessor():
                 CAST(WEEKDAY(CAST(`Start_Time` as timestamp)) as int) as `Weekday`,
                 CAST(extract(DAY FROM CAST(`Start_Time` as timestamp)) as int) as `Day`,
                 CAST(extract(HOUR FROM CAST(`Start_Time` as timestamp)) as int) as `Hour`,
-                CAST(extract(MINUTE FROM CAST(`Start_Time` as timestamp)) as int) as `Minute`, 
+                CAST(extract(MINUTE FROM CAST(`Start_Time` as timestamp)) as int) as `Minute`,
                 CAST(`Start_Lat` as decimal(38, 10)) as `Start_Lat`,
                 CAST(`Start_Lng` as decimal(38, 10)) as `Start_Lng`,
                 CAST(`Street` as string) as `Street`,
@@ -89,45 +104,87 @@ class DataProcessor():
             FROM raw_accidents
             WHERE Source = 'Source1'
         """)
-        
+
         # 2 - Special treatment of weather conditions
         # We first simplify the weather conditions to a few categories
-        clean_df = clean_df.withColumn('Clear', when(lower(col('Weather_Condition')).contains('clear'), True).otherwise(False))
-        clean_df = clean_df.withColumn('Cloud', when(lower(col('Weather_Condition')).contains('cloud') | lower(col('Weather_Condition')).contains('overcast'), True).otherwise(False))
-        clean_df = clean_df.withColumn('Rain', when(lower(col('Weather_Condition')).contains('rain') | lower(col('Weather_Condition')).contains('storm'), True).otherwise(False))
-        clean_df = clean_df.withColumn('Heavy_Rain', when(lower(col('Weather_Condition')).contains('heavy rain') |
-                                            lower(col('Weather_Condition')).contains('rain shower') |
-                                            lower(col('Weather_Condition')).contains('heavy t-storm') |
-                                            lower(col('Weather_Condition')).contains('heavy thunderstorms'), True).otherwise(False))
-        clean_df = clean_df.withColumn('Snow', when(lower(col('Weather_Condition')).contains('snow') |
-                                        lower(col('Weather_Condition')).contains('sleet') |
-                                        lower(col('Weather_Condition')).contains('ice'), True).otherwise(False))
-        clean_df = clean_df.withColumn('Heavy_Snow', when(lower(col('Weather_Condition')).contains('heavy snow') |
-                                            lower(col('Weather_Condition')).contains('heavy sleet') |
-                                            lower(col('Weather_Condition')).contains('heavy ice pellets') |
-                                            lower(col('Weather_Condition')).contains('snow showers') |
-                                            lower(col('Weather_Condition')).contains('squalls'), True).otherwise(False))
-        clean_df = clean_df.withColumn('Fog', when(lower(col('Weather_Condition')).contains('fog'), True).otherwise(False))
+        clean_df = clean_df.withColumn(
+            "Clear", when(lower(col("Weather_Condition")).contains("clear"), True).otherwise(False)
+        )
+        clean_df = clean_df.withColumn(
+            "Cloud",
+            when(
+                lower(col("Weather_Condition")).contains("cloud")
+                | lower(col("Weather_Condition")).contains("overcast"),
+                True,
+            ).otherwise(False),
+        )
+        clean_df = clean_df.withColumn(
+            "Rain",
+            when(
+                lower(col("Weather_Condition")).contains("rain") | lower(col("Weather_Condition")).contains("storm"),
+                True,
+            ).otherwise(False),
+        )
+        clean_df = clean_df.withColumn(
+            "Heavy_Rain",
+            when(
+                lower(col("Weather_Condition")).contains("heavy rain")
+                | lower(col("Weather_Condition")).contains("rain shower")
+                | lower(col("Weather_Condition")).contains("heavy t-storm")
+                | lower(col("Weather_Condition")).contains("heavy thunderstorms"),
+                True,
+            ).otherwise(False),
+        )
+        clean_df = clean_df.withColumn(
+            "Snow",
+            when(
+                lower(col("Weather_Condition")).contains("snow")
+                | lower(col("Weather_Condition")).contains("sleet")
+                | lower(col("Weather_Condition")).contains("ice"),
+                True,
+            ).otherwise(False),
+        )
+        clean_df = clean_df.withColumn(
+            "Heavy_Snow",
+            when(
+                lower(col("Weather_Condition")).contains("heavy snow")
+                | lower(col("Weather_Condition")).contains("heavy sleet")
+                | lower(col("Weather_Condition")).contains("heavy ice pellets")
+                | lower(col("Weather_Condition")).contains("snow showers")
+                | lower(col("Weather_Condition")).contains("squalls"),
+                True,
+            ).otherwise(False),
+        )
+        clean_df = clean_df.withColumn(
+            "Fog", when(lower(col("Weather_Condition")).contains("fog"), True).otherwise(False)
+        )
 
         # And show weather condition fields as NULLs if the Weather_Condition field is NULL
-        weather = ['Clear', 'Cloud', 'Rain', 'Heavy_Rain', 'Snow', 'Heavy_Snow', 'Fog']
+        weather = ["Clear", "Cloud", "Rain", "Heavy_Rain", "Snow", "Heavy_Snow", "Fog"]
         for condition in weather:
-            clean_df = clean_df.withColumn(condition,
-                            when(col('Weather_Condition').isNull(), lit(None))
-                            .otherwise(col(condition)))
-            
+            clean_df = clean_df.withColumn(
+                condition, when(col("Weather_Condition").isNull(), lit(None)).otherwise(col(condition))
+            )
 
         # 3 - Drop rows with null values in the specified columns
-        clean_df = clean_df.dropna(subset=['City', 'Zipcode', 'Airport_Code',
-                            'Sunrise_Sunset', 'Civil_Twilight', 'Nautical_Twilight', 'Astronomical_Twilight'])
-        
+        clean_df = clean_df.dropna(
+            subset=[
+                "City",
+                "Zipcode",
+                "Airport_Code",
+                "Sunrise_Sunset",
+                "Civil_Twilight",
+                "Nautical_Twilight",
+                "Astronomical_Twilight",
+            ]
+        )
+
         # 4 - Create instance variable with cleaned DataFrame
         clean_df_with_timestamp = clean_df.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
         clean_df_with_timestamp.write.mode("overwrite").saveAsTable(self.clean_df_address)
-        
-    
+
     def split_data(self, test_size: float = 0.2, seed: int = 42) -> tuple[DataFrame, DataFrame]:
         """Split the DataFrame (self.clean_df) into training and test sets using PySpark's randomSplit.
 
@@ -141,7 +198,6 @@ class DataProcessor():
         train_df, test_df = cleaned_table.randomSplit([train_size, test_size], seed=seed)
         return train_df, test_df
 
-    
     def save_to_catalog(self, train_set: DataFrame, test_set: DataFrame) -> None:
         """Save the train and test sets into Databricks tables.
 
@@ -154,11 +210,10 @@ class DataProcessor():
         test_set_with_timestamp = test_set.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
-        
+
         train_set_with_timestamp.write.mode("overwrite").saveAsTable(self.training_set_address)
         test_set_with_timestamp.write.mode("overwrite").saveAsTable(self.test_set_address)
 
-    
     def enable_change_data_feed(self) -> None:
         """Enable Change Data Feed for train and test set tables.
 
