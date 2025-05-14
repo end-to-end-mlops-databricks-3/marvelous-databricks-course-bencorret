@@ -9,8 +9,13 @@ class DataProcessor:
 
     This class handles data preprocessing, splitting, and saving to Databricks tables.
     """
-    
+
     def __init__(self, spark: SparkSession, config: ProjectConfig, dataframe: DataFrame) -> None:
+        """Initialize the DataProcessor with a Spark session, configuration, and DataFrame.
+        :param spark: Spark session to be used for DataFrame operations.
+        :param config: Configuration object containing catalog and schema information.
+        :param dataframe: The DataFrame to be processed.
+        """
         self.dataframe = dataframe
         self.config = config
         self.spark = spark
@@ -26,6 +31,8 @@ class DataProcessor:
         3. Creates new features based on existing data.
         4. Saves the cleaned DataFrame to a Delta table in the specified catalog and schema.
         """
+        self.dataframe.createOrReplaceTempView("raw_accidents")
+
         # Features 'ID' doesn't provide any useful information about accidents themselves.
         # 'TMC', 'Distance(mi)', 'End_Time' (we have start time), 'Duration', 'End_Lat', and 'End_Lng'(we have start location)
         # can be collected only after the accident has already happened and hence cannot be predictors
@@ -36,7 +43,6 @@ class DataProcessor:
 
         # 1 - We arbitrarily choose one source only. Different websites / databases use different collection and classification methodologies.
         # We will focus on the source offering the most data: Source1
-        self.dataframe.createOrReplaceTempView("raw_accidents")
         clean_df = self.spark.sql("""
             WITH median_precipitation AS (
             SELECT median(CAST(`Precipitation(in)` as decimal(12,4))) AS median_precip
