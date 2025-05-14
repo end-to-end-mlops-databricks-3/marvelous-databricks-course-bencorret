@@ -12,6 +12,7 @@ class DataProcessor:
 
     def __init__(self, spark: SparkSession, config: ProjectConfig, dataframe: DataFrame) -> None:
         """Initialize the DataProcessor with a Spark session, configuration, and DataFrame.
+
         :param spark: Spark session to be used for DataFrame operations.
         :param config: Configuration object containing catalog and schema information.
         :param dataframe: The DataFrame to be processed.
@@ -25,6 +26,7 @@ class DataProcessor:
 
     def preprocess(self) -> None:
         """Clean raw dataset, to make it ready for training and testing.
+
         This method performs the following steps:
         1. Selects relevant columns and filters the dataset based on the source.
         2. Cleans and transforms the data, including handling missing values and converting data types.
