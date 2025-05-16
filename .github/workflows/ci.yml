@@ -40,7 +40,6 @@ jobs:
         run: |
           uv run pre-commit run --all-files
 
-# No tests for now, focus on working project
-      # - name: run pytest
-      #   run: |
-      #     uv run pytest
+      - name: run pytest
+        run: |
+          uv run pytest
