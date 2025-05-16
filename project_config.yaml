@@ -1,0 +1,68 @@
+prd:
+  catalog_name: mlops_prd
+  schema_name: corretco
+  cleaned_table_name: us_accidents_cleaned
+acc:
+  catalog_name: mlops_acc
+  schema_name: corretco
+  cleaned_table_name: us_accidents_cleaned
+dev:
+  catalog_name: mlops_dev
+  schema_name: corretco
+  cleaned_table_name: us_accidents_cleaned
+
+parameters:
+  learning_rate: 0.01
+  n_estimators: 1000
+  max_depth: 6
+
+num_features:
+  - Start_Time
+  - Year
+  - Month
+  - Weekday
+  - Day
+  - Hour
+  - Minute
+  - Start_Lat
+  - Start_Lng
+  - Weather_Timestamp
+  - Temperature(F)
+  - Humidity(%)
+  - Pressure(in)
+  - Visibility(mi)
+  - Wind_Speed(mph)
+  - Precipitation(in)
+
+cat_features:
+  - Street
+  - City
+  - County
+  - State
+  - Zipcode
+  - Timezone
+  - Airport_Code
+  - Wind_Direction
+  - Weather_Condition
+  - Amenity
+  - Bump
+  - Crossing
+  - Give_Way
+  - Junction
+  - No_Exit
+  - Railway
+  - Roundabout
+  - Station
+  - Stop
+  - Traffic_Calming
+  - Traffic_Signal
+  - Sunrise_Sunset
+  - Civil_Twilight
+  - Nautical_Twilight
+  - Astronomical_Twilight
+  - Clear
+  - Cloud
+  - Rain
+  - Heavy_Rain
+
+target: Severity
