@@ -1,9 +1,6 @@
 """Unit tests for DataProcessor."""
 
 import pandas as pd
-import pytest
-from conftest import CATALOG_DIR
-from delta.tables import DeltaTable
 from pyspark.sql import SparkSession
 
 from us_accidents.config import ProjectConfig
@@ -17,7 +14,8 @@ def test_data_ingestion(sample_data: pd.DataFrame) -> None:
 
     :param sample_data: The sample data to be tested
     """
-    pass
+    assert sample_data.shape[0] > 0
+    assert sample_data.shape[1] > 0
 
 
 def test_dataprocessor_init(
