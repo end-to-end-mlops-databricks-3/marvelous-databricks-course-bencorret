@@ -21,10 +21,14 @@ sys.path.append(str(Path.cwd().parent / "src"))
 
 from us_accidents.config import ProjectConfig
 from us_accidents.data_processor import DataProcessor
+from marvelous.logging import setup_logging
+from marvelous.timer import Timer
 
 # Load configuration
 config_path = os.path.abspath(os.path.join(Path.cwd(), "..", "project_config.yaml"))
 config = ProjectConfig.from_yaml(config_path=config_path, env="dev")
+
+setup_logging(log_file="logs/marvelous-1.log")
 
 logger.info("Configuration loaded:")
 logger.info(yaml.dump(config, default_flow_style=False))
@@ -49,11 +53,12 @@ raw_df = spark.read.format("csv").option("header", "true").option("separator", "
 # COMMAND ----------
 
 # Initialize DataProcessor and clean the data
-logger.info("Initialize DataProcessor object")
-data_processor = DataProcessor(spark=spark, config=config, dataframe=raw_df)
+with Timer() as preprocess_timer:
+    logger.info("Initialize DataProcessor object")
+    data_processor = DataProcessor(spark=spark, config=config, dataframe=raw_df)
 
-logger.info("Preprocess data + save table to UC")
-data_processor.preprocess()
+    logger.info("Preprocess data + save table to UC")
+    data_processor.preprocess()
 
 
 # COMMAND ----------
