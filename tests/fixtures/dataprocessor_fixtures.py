@@ -1,12 +1,11 @@
 """Dataloader fixture."""
 
-import pandas as pd
 import pytest
-from loguru import logger
-from pyspark.sql import SparkSession
-
 from house_price import PROJECT_DIR
 from house_price.config import ProjectConfig, Tags
+from loguru import logger
+from pyspark.sql import DataFrame, SparkSession
+
 from tests.unit_tests.spark_config import spark_config
 
 
@@ -48,20 +47,15 @@ def config() -> ProjectConfig:
 
 
 @pytest.fixture(scope="function")
-def sample_data(config: ProjectConfig, spark_session: SparkSession) -> pd.DataFrame:
+def sample_data(config: ProjectConfig, spark_session: SparkSession) -> DataFrame:
     """Create a sample DataFrame from a CSV file.
 
-    This fixture reads a CSV file using either Spark or pandas, then converts it to a Pandas DataFrame,
+    This fixture reads a CSV file using either Spark or pandas, then converts it to a Spark DataFrame,
 
-    :return: A sampled Pandas DataFrame containing some sample of the original data.
+    :return: A sampled Spark DataFrame containing some sample of the original data.
     """
     file_path = PROJECT_DIR / "tests" / "test_data" / "sample.csv"
-    sample = pd.read_csv(file_path.as_posix())
-
-    # Alternative approach to reading the sample
-    # Important Note: Replace NaN with None in Pandas Before Conversion to Spark DataFrame:
-    # sample = sample.where(sample.notna(), None)  # noqa
-    # sample = spark_session.createDataFrame(sample).toPandas()  # noqa
+    sample = spark_session.read.format("csv").option("header", "true").option("separator", ",").load(file_path)
     return sample
 
 

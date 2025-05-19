@@ -1,7 +1,7 @@
 """Unit tests for DataProcessor."""
 
 import pandas as pd
-from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame, SparkSession
 
 from us_accidents.config import ProjectConfig
 from us_accidents.data_processor import DataProcessor
@@ -19,7 +19,7 @@ def test_data_ingestion(sample_data: pd.DataFrame) -> None:
 
 
 def test_dataprocessor_init(
-    sample_data: pd.DataFrame,
+    sample_data: DataFrame,
     config: ProjectConfig,
     spark_session: SparkSession,
 ) -> None:
@@ -29,4 +29,9 @@ def test_dataprocessor_init(
     :param config: Configuration object for the project
     :param spark: SparkSession object
     """
-    pass
+    processor = DataProcessor(spark=spark_session, config=config, dataframe=sample_data)
+    assert isinstance(processor.dataframe, DataFrame)
+    assert processor.dataframe.equals(sample_data)
+
+    assert isinstance(processor.config, ProjectConfig)
+    assert isinstance(processor.spark, SparkSession)
