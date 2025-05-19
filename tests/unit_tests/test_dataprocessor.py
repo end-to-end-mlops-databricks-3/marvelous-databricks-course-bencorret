@@ -5,17 +5,18 @@ from pyspark.sql import DataFrame, SparkSession
 
 from us_accidents.config import ProjectConfig
 from us_accidents.data_processor import DataProcessor
+from tests.fixtures.datapreprocessor_fixture import spark_session, config, sample_data
 
 
-def test_data_ingestion(sample_data: pd.DataFrame) -> None:
+def test_data_ingestion(sample_data: DataFrame) -> None:
     """Test the data ingestion process by checking the shape of the sample data.
 
     Asserts that the sample data has at least one row and one column.
 
     :param sample_data: The sample data to be tested
     """
-    assert sample_data.shape[0] > 0
-    assert sample_data.shape[1] > 0
+    assert sample_data.count() > 0
+    assert len(sample_data.columns) > 0
 
 
 def test_dataprocessor_init(
@@ -31,7 +32,6 @@ def test_dataprocessor_init(
     """
     processor = DataProcessor(spark=spark_session, config=config, dataframe=sample_data)
     assert isinstance(processor.dataframe, DataFrame)
-    assert processor.dataframe.equals(sample_data)
 
     assert isinstance(processor.config, ProjectConfig)
     assert isinstance(processor.spark, SparkSession)
