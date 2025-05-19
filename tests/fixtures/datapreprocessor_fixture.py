@@ -1,12 +1,12 @@
 """Dataloader fixture."""
 
 import pytest
-from us_accidents import PROJECT_DIR
-from us_accidents.config import ProjectConfig, Tags
 from loguru import logger
 from pyspark.sql import DataFrame, SparkSession
 
 from tests.unit_tests.spark_config import spark_config
+from us_accidents import PROJECT_DIR
+from us_accidents.config import ProjectConfig, Tags
 
 
 @pytest.fixture(scope="session")
@@ -55,7 +55,9 @@ def sample_data(config: ProjectConfig, spark_session: SparkSession) -> DataFrame
     :return: A sampled Spark DataFrame containing some sample of the original data.
     """
     file_path = PROJECT_DIR / "tests" / "test_data" / "sample.csv"
-    sample = spark_session.read.format("csv").option("header", "true").option("separator", ",").load(file_path.as_posix())
+    sample = (
+        spark_session.read.format("csv").option("header", "true").option("separator", ",").load(file_path.as_posix())
+    )
     return sample
 
 

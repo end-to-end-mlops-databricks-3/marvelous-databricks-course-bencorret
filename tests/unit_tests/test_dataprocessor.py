@@ -1,11 +1,9 @@
 """Unit tests for DataProcessor."""
 
-import pandas as pd
 from pyspark.sql import DataFrame, SparkSession
 
 from us_accidents.config import ProjectConfig
 from us_accidents.data_processor import DataProcessor
-from tests.fixtures.datapreprocessor_fixture import spark_session, config, sample_data
 
 
 def test_data_ingestion(sample_data: DataFrame) -> None:
