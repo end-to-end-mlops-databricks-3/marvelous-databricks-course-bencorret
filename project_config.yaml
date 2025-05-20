@@ -11,10 +11,14 @@ dev:
   schema_name: corretco
   cleaned_table_name: us_accidents_cleaned
 
+experiment_name: /Shared/us-accidents-basic
+
 parameters:
-  learning_rate: 0.01
-  n_estimators: 1000
-  max_depth: 6
+  n_estimators: [10, 50, 100]
+  max_features: ['sqrt']
+  cv: 5
+  n_jobs: 8
+  scoring: f1_macro
 
 num_features:
   - Timezone_US/Eastern
