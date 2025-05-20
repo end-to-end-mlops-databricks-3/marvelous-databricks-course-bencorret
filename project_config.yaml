@@ -17,52 +17,35 @@ parameters:
   max_depth: 6
 
 num_features:
-  - Start_Time
-  - Year
-  - Month
-  - Weekday
-  - Day
-  - Hour
-  - Minute
-  - Start_Lat
-  - Start_Lng
-  - Weather_Timestamp
-  - Temperature(F)
-  - Humidity(%)
-  - Pressure(in)
-  - Visibility(mi)
-  - Wind_Speed(mph)
-  - Precipitation(in)
-
-cat_features:
-  - Street
-  - City
-  - County
-  - State
-  - Zipcode
-  - Timezone
-  - Airport_Code
-  - Wind_Direction
-  - Weather_Condition
-  - Amenity
-  - Bump
-  - Crossing
-  - Give_Way
-  - Junction
-  - No_Exit
-  - Railway
-  - Roundabout
+  - Side_R
+  - Timezone_US/Eastern 
+  - Timezone_US/Mountain
+  - Timezone_US/Pacific
+  - Weekday_1
+  - Weekday_2
+  - Weekday_3
+  - Weekday_4
+  - Weekday_5
+  - Weekday_6
   - Station
   - Stop
-  - Traffic_Calming
   - Traffic_Signal
-  - Sunrise_Sunset
-  - Civil_Twilight
-  - Nautical_Twilight
-  - Astronomical_Twilight
-  - Clear
-  - Cloud
-  - Rain
-  - Heavy_Rain
+  - Severity_4
+  - Rd
+  - St
+  - Dr
+  - Ave
+  - Blvd
+  - I-
+  - Astronomical_Twilight_Night
+
+cat_features:
+  - Start_Lat
+  - Start_Lng
+  - Minute_Freq
+  - Population_County_log
+  - Street_Freq
+  - State_Freq
+  - Pressure_bc
 
 target: Severity
