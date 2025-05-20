@@ -1,0 +1,69 @@
+2025-05-20 16:08:15.993 | INFO     | __main__:<module>:24 - Configuration loaded:
+2025-05-20 16:08:16.005 | INFO     | __main__:<module>:25 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Street
+  - City
+  - County
+  - State
+  - Zipcode
+  - Timezone
+  - Airport_Code
+  - Wind_Direction
+  - Weather_Condition
+  - Amenity
+  - Bump
+  - Crossing
+  - Give_Way
+  - Junction
+  - No_Exit
+  - Railway
+  - Roundabout
+  - Station
+  - Stop
+  - Traffic_Calming
+  - Traffic_Signal
+  - Sunrise_Sunset
+  - Civil_Twilight
+  - Nautical_Twilight
+  - Astronomical_Twilight
+  - Clear
+  - Cloud
+  - Rain
+  - Heavy_Rain
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  num_features:
+  - Start_Time
+  - Year
+  - Month
+  - Weekday
+  - Day
+  - Hour
+  - Minute
+  - Start_Lat
+  - Start_Lng
+  - Weather_Timestamp
+  - Temperature(F)
+  - Humidity(%)
+  - Pressure(in)
+  - Visibility(mi)
+  - Wind_Speed(mph)
+  - Precipitation(in)
+  parameters:
+    learning_rate: 0.01
+    max_depth: 6
+    n_estimators: 1000
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
