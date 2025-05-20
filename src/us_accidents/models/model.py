@@ -6,6 +6,7 @@ num_features → List of numerical feature names.
 cat_features → List of categorical feature names.
 target → The column to predict.
 parameters → Hyperparameters for RandomForestClassifier.
+experiment_name → Name of the MLflow experiment.
 catalog_name, schema_name → Database schema names for Databricks tables.
 """
 
