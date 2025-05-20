@@ -18,7 +18,7 @@ parameters:
 
 num_features:
   - Side_R
-  - Timezone_US/Eastern 
+  - Timezone_US/Eastern
   - Timezone_US/Mountain
   - Timezone_US/Pacific
   - Weekday_1

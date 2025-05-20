@@ -185,19 +185,18 @@ class DataProcessor:
             ]
         )
         return clean_df
-    
-    def resample_data(self, df: DataFrame, resampling_threshold:int=15000) -> DataFrame:
-        """Resample the cleaned dataset
+
+    def resample_data(self, df: DataFrame, resampling_threshold: int = 15000) -> DataFrame:
+        """Resample the cleaned dataset.
 
         Severity type 4 accident are overwhelmingly present in the dataset.
         We will resample the dataset to balance between severity 4 accidents and less severe types.
-        :param spark: Spark session to be used for DataFrame operations.
-        :param config: Configuration object containing catalog and schema information.
         :param dataframe: The DataFrame to be processed.
+        :param resampling_threshold: Resampling threshold.
         """
         # Separate the DataFrame into two based on the "severity_4" column
-        df_true = df.filter(df["severity_4"] == True)
-        df_false = df.filter(df["severity_4"] == False)
+        df_true = df.filter("severity_4 = true")
+        df_false = df.filter("severity_4 = false")
 
         # Count the number of rows in each DataFrame
         count_true = df_true.count()
@@ -221,7 +220,7 @@ class DataProcessor:
         # Union the sampled DataFrames
         df_resampled = df_true_sampled.union(df_false_sampled)
         return df_resampled
-    
+
     def preprocess(self) -> None:
         """Complete the preprocessing.
 
@@ -259,12 +258,12 @@ class DataProcessor:
                 Start_Lat,
                 Start_Lng,
                 Pressure_in as Pressure_bc
-            from cleaned_accidents                                  
+            from cleaned_accidents
         """)
 
         # Resample the dataset: over-presence of severity 4 accidents
         resampled_df = self.resample_data(featurized_df)
-        
+
         # Save this dataframe to a UC table
         resampled_df_with_timestamp = resampled_df.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
