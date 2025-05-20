@@ -18,9 +18,9 @@ from mlflow import MlflowClient
 from mlflow.data.dataset_source import DatasetSource
 from mlflow.models import infer_signature
 from pyspark.sql import SparkSession
-from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import GridSearchCV
 
 from us_accidents.config import ProjectConfig, Tags
 
@@ -60,14 +60,14 @@ class BasicModel:
         logger.info("🔄 Loading data from Databricks tables...")
         self.train_set_spark = self.spark.table(f"{self.catalog_name}.{self.schema_name}.train_set")
         self.train_set = self.train_set_spark.toPandas()
-        self.train_set['Start_Lat'] = self.train_set['Start_Lat'].astype('float64')
-        self.train_set['Start_Lng'] = self.train_set['Start_Lng'].astype('float64')
-        self.train_set['Pressure_bc'] = self.train_set['Pressure_bc'].astype('float64')
-        
+        self.train_set["Start_Lat"] = self.train_set["Start_Lat"].astype("float64")
+        self.train_set["Start_Lng"] = self.train_set["Start_Lng"].astype("float64")
+        self.train_set["Pressure_bc"] = self.train_set["Pressure_bc"].astype("float64")
+
         self.test_set = self.spark.table(f"{self.catalog_name}.{self.schema_name}.test_set").toPandas()
-        self.test_set['Start_Lat'] = self.test_set['Start_Lat'].astype('float64')
-        self.test_set['Start_Lng'] = self.test_set['Start_Lng'].astype('float64')
-        self.test_set['Pressure_bc'] = self.test_set['Pressure_bc'].astype('float64')
+        self.test_set["Start_Lat"] = self.test_set["Start_Lat"].astype("float64")
+        self.test_set["Start_Lng"] = self.test_set["Start_Lng"].astype("float64")
+        self.test_set["Pressure_bc"] = self.test_set["Pressure_bc"].astype("float64")
 
         self.data_version = "0"  # describe history -> retrieve
 
@@ -79,17 +79,20 @@ class BasicModel:
 
     def train(self) -> None:
         """Train the model."""
-
         logger.info("🔄 Building random forest classifier...")
         clf_base = RandomForestClassifier()
-        grid = {'n_estimators': self.parameters['n_estimators'],
-                'max_features': self.parameters['max_features'],}
-        self.clf_rf = GridSearchCV(clf_base, 
-                                   grid, 
-                                   cv=self.parameters['cv'], 
-                                   n_jobs=self.parameters['n_jobs'], 
-                                   scoring=self.parameters['scoring'],)
-        
+        grid = {
+            "n_estimators": self.parameters["n_estimators"],
+            "max_features": self.parameters["max_features"],
+        }
+        self.clf_rf = GridSearchCV(
+            clf_base,
+            grid,
+            cv=self.parameters["cv"],
+            n_jobs=self.parameters["n_jobs"],
+            scoring=self.parameters["scoring"],
+        )
+
         logger.info("🚀 Starting training...")
         self.clf_rf.fit(self.X_train, self.y_train)
         logger.info("✅ Completed training...")
@@ -121,7 +124,7 @@ class BasicModel:
 
             # Log the model
             logger.info("✒️ Building signature")
-            y_pred_df = pd.DataFrame(y_pred, columns=['prediction'])
+            y_pred_df = pd.DataFrame(y_pred, columns=["prediction"])
             signature = infer_signature(model_input=self.X_train, model_output=y_pred_df)
             logger.info("📚 Creating dataset to log")
             dataset = mlflow.data.from_spark(

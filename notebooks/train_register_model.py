@@ -11,22 +11,24 @@
 
 # COMMAND ----------
 
-import mlflow
-from pyspark.sql import SparkSession
 import os
 import sys
 from pathlib import Path
-from dotenv import load_dotenv
+
+import mlflow
 import yaml
+from dotenv import load_dotenv
 from loguru import logger
+from pyspark.sql import SparkSession
 
 # Add the src directory to the Python path
 sys.path.append(str(Path.cwd().parent / "src"))
 
-from us_accidents.config import ProjectConfig, Tags
-from us_accidents.models.model import BasicModel
 from marvelous.common import is_databricks
 from marvelous.logging import setup_logging
+
+from us_accidents.config import ProjectConfig, Tags
+from us_accidents.models.model import BasicModel
 
 # Load configuration
 config_path = os.path.abspath(os.path.join(Path.cwd(), "..", "project_config.yaml"))
