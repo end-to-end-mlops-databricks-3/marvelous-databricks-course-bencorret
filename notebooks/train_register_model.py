@@ -59,7 +59,6 @@ basic_model = BasicModel(config=config, tags=tags, spark=spark)
 
 # COMMAND ----------
 basic_model.load_data()
-basic_model.prepare_features()
 
 # COMMAND ----------
 # Train + log the model (runs everything including MLflow logging)
@@ -68,10 +67,10 @@ basic_model.log_model()
 
 # COMMAND ----------
 run_id = mlflow.search_runs(
-    experiment_names=["/Shared/house-prices-basic"], filter_string="tags.branch='week2'"
+    experiment_names=["/Shared/us-accidents-basic"], filter_string="tags.branch='week2'"
 ).run_id[0]
 
-model = mlflow.sklearn.load_model(f"runs:/{run_id}/lightgbm-pipeline-model")
+model = mlflow.sklearn.load_model(f"runs:/{run_id}/random-forest-classifier-model")
 
 # COMMAND ----------
 # Retrieve dataset for the current run
