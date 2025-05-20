@@ -60,7 +60,15 @@ class BasicModel:
         logger.info("🔄 Loading data from Databricks tables...")
         self.train_set_spark = self.spark.table(f"{self.catalog_name}.{self.schema_name}.train_set")
         self.train_set = self.train_set_spark.toPandas()
+        self.train_set['Start_Lat'] = self.train_set['Start_Lat'].astype('float64')
+        self.train_set['Start_Lng'] = self.train_set['Start_Lng'].astype('float64')
+        self.train_set['Pressure_bc'] = self.train_set['Pressure_bc'].astype('float64')
+        
         self.test_set = self.spark.table(f"{self.catalog_name}.{self.schema_name}.test_set").toPandas()
+        self.test_set['Start_Lat'] = self.test_set['Start_Lat'].astype('float64')
+        self.test_set['Start_Lng'] = self.test_set['Start_Lng'].astype('float64')
+        self.test_set['Pressure_bc'] = self.test_set['Pressure_bc'].astype('float64')
+
         self.data_version = "0"  # describe history -> retrieve
 
         self.X_train = self.train_set[self.num_features + self.cat_features]
