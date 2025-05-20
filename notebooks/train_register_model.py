@@ -50,7 +50,7 @@ if not is_databricks():
 
 
 config_path = os.path.abspath(os.path.join(Path.cwd(), "..", "project_config.yaml"))
-config = ProjectConfig.from_yaml(config_path=config_path, env="prd")
+config = ProjectConfig.from_yaml(config_path=config_path, env="dev")
 spark = SparkSession.builder.getOrCreate()
 tags = Tags(**{"git_sha": "abcd12345", "branch": "week2", "job_run_id": "job-12345"})
 
