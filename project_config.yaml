@@ -17,7 +17,6 @@ parameters:
   max_depth: 6
 
 num_features:
-  - Side_R
   - Timezone_US/Eastern
   - Timezone_US/Mountain
   - Timezone_US/Pacific
@@ -42,10 +41,6 @@ num_features:
 cat_features:
   - Start_Lat
   - Start_Lng
-  - Minute_Freq
-  - Population_County_log
-  - Street_Freq
-  - State_Freq
   - Pressure_bc
 
-target: Severity
+target: Severity_4

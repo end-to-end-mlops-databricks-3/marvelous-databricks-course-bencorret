@@ -1,10 +1,13 @@
 # Databricks notebook source
 
-# COMMAND ----------
-# %pip install -e ..
 
 # COMMAND ----------
-# %restart_python
+
+#%pip install -e ..
+
+# COMMAND ----------
+
+#%restart_python
 
 # COMMAND ----------
 
@@ -70,6 +73,7 @@ X_train, X_test = data_processor.split_data()
 
 
 # COMMAND ----------
+
 # Save to catalog
 logger.info("Save train and test sets to catalog")
 data_processor.save_to_catalog(X_train, X_test)
