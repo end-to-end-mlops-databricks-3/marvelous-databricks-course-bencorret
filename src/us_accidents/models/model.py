@@ -113,7 +113,7 @@ class BasicModel:
 
             # Log the model
             logger.info("✒️ Building signature")
-            y_pred_df = y_pred.to_frame()
+            y_pred_df = pd.DataFrame(y_pred, columns=['prediction'])
             signature = infer_signature(model_input=self.X_train, model_output=y_pred_df)
             logger.info("📚 Creating dataset to log")
             dataset = mlflow.data.from_spark(
