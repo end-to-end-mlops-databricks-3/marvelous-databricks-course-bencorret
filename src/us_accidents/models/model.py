@@ -133,7 +133,7 @@ class BasicModel:
             mlflow.log_input(dataset, context="training")
             logger.info("🧪 Logging model")
             mlflow.sklearn.log_model(
-                sk_model=self.pipeline, artifact_path="random-forest-classifier-model", signature=signature
+                sk_model=self.clf_rf, artifact_path="random-forest-classifier-model", signature=signature
             )
 
     def register_model(self) -> None:
