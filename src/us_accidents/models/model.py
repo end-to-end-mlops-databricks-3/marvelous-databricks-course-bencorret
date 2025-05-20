@@ -104,6 +104,7 @@ class BasicModel:
             logger.info(f"📊 R2 Score: {r2}")
 
             # Log parameters and metrics
+            logger.info("📊 Logging metrics")
             mlflow.log_param("model_type", "RandomForestClassifier")
             mlflow.log_params(self.parameters)
             mlflow.log_metric("mse", mse)
@@ -111,13 +112,17 @@ class BasicModel:
             mlflow.log_metric("r2_score", r2)
 
             # Log the model
+            logger.info("✒️ Building signature")
             signature = infer_signature(model_input=self.X_train, model_output=y_pred)
+            logger.info("📚 Creating dataset to log")
             dataset = mlflow.data.from_spark(
                 self.train_set_spark,
                 table_name=f"{self.catalog_name}.{self.schema_name}.train_set",
                 version=self.data_version,
             )
+            logger.info("📚 Logging dataset")
             mlflow.log_input(dataset, context="training")
+            logger.info("🧪 Logging model")
             mlflow.sklearn.log_model(
                 sk_model=self.pipeline, artifact_path="random-forest-classifier-model", signature=signature
             )
