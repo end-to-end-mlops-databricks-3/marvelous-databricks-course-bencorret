@@ -1,0 +1,388 @@
+2025-05-20 16:08:15.993 | INFO     | __main__:<module>:24 - Configuration loaded:
+2025-05-20 16:08:16.005 | INFO     | __main__:<module>:25 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Street
+  - City
+  - County
+  - State
+  - Zipcode
+  - Timezone
+  - Airport_Code
+  - Wind_Direction
+  - Weather_Condition
+  - Amenity
+  - Bump
+  - Crossing
+  - Give_Way
+  - Junction
+  - No_Exit
+  - Railway
+  - Roundabout
+  - Station
+  - Stop
+  - Traffic_Calming
+  - Traffic_Signal
+  - Sunrise_Sunset
+  - Civil_Twilight
+  - Nautical_Twilight
+  - Astronomical_Twilight
+  - Clear
+  - Cloud
+  - Rain
+  - Heavy_Rain
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  num_features:
+  - Start_Time
+  - Year
+  - Month
+  - Weekday
+  - Day
+  - Hour
+  - Minute
+  - Start_Lat
+  - Start_Lng
+  - Weather_Timestamp
+  - Temperature(F)
+  - Humidity(%)
+  - Pressure(in)
+  - Visibility(mi)
+  - Wind_Speed(mph)
+  - Precipitation(in)
+  parameters:
+    learning_rate: 0.01
+    max_depth: 6
+    n_estimators: 1000
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+2025-05-20 18:41:37.508 | INFO     | __main__:<module>:24 - Configuration loaded:
+2025-05-20 18:41:37.513 | INFO     | __main__:<module>:25 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Start_Lat
+  - Start_Lng
+  - Minute_Freq
+  - Population_County_log
+  - Street_Freq
+  - State_Freq
+  - Pressure_bc
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  num_features:
+  - Side_R
+  - Timezone_US/Eastern
+  - Timezone_US/Mountain
+  - Timezone_US/Pacific
+  - Weekday_1
+  - Weekday_2
+  - Weekday_3
+  - Weekday_4
+  - Weekday_5
+  - Weekday_6
+  - Station
+  - Stop
+  - Traffic_Signal
+  - Severity_4
+  - Rd
+  - St
+  - Dr
+  - Ave
+  - Blvd
+  - I-
+  - Astronomical_Twilight_Night
+  parameters:
+    learning_rate: 0.01
+    max_depth: 6
+    n_estimators: 1000
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-05-20 18:41:46.551 | INFO     | __main__:<module>:2 - Building Spark Session
+2025-05-20 18:41:46.621 | INFO     | __main__:<module>:5 - Loading raw dataframe
+2025-05-20 18:42:08.678 | INFO     | __main__:<module>:3 - Initialize DataProcessor object
+2025-05-20 18:42:08.679 | INFO     | __main__:<module>:6 - Preprocess data + save table to UC
+2025-05-20 18:44:13.276 | INFO     | __main__:<module>:2 - Split data
+2025-05-20 18:44:21.596 | INFO     | __main__:<module>:2 - Save train and test sets to catalog
+2025-05-20 18:44:35.622 | INFO     | __main__:<module>:6 - Enable CDF
+2025-05-20 18:46:33.306 | INFO     | __main__:<module>:23 - Configuration loaded:
+2025-05-20 18:46:33.310 | INFO     | __main__:<module>:24 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Start_Lat
+  - Start_Lng
+  - Minute_Freq
+  - Population_County_log
+  - Street_Freq
+  - State_Freq
+  - Pressure_bc
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  num_features:
+  - Side_R
+  - Timezone_US/Eastern
+  - Timezone_US/Mountain
+  - Timezone_US/Pacific
+  - Weekday_1
+  - Weekday_2
+  - Weekday_3
+  - Weekday_4
+  - Weekday_5
+  - Weekday_6
+  - Station
+  - Stop
+  - Traffic_Signal
+  - Severity_4
+  - Rd
+  - St
+  - Dr
+  - Ave
+  - Blvd
+  - I-
+  - Astronomical_Twilight_Night
+  parameters:
+    learning_rate: 0.01
+    max_depth: 6
+    n_estimators: 1000
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-05-20 18:55:01.593 | INFO     | __main__:<module>:25 - Configuration loaded:
+2025-05-20 18:55:01.598 | INFO     | __main__:<module>:26 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Start_Lat
+  - Start_Lng
+  - Minute_Freq
+  - Population_County_log
+  - Street_Freq
+  - State_Freq
+  - Pressure_bc
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  num_features:
+  - Side_R
+  - Timezone_US/Eastern
+  - Timezone_US/Mountain
+  - Timezone_US/Pacific
+  - Weekday_1
+  - Weekday_2
+  - Weekday_3
+  - Weekday_4
+  - Weekday_5
+  - Weekday_6
+  - Station
+  - Stop
+  - Traffic_Signal
+  - Severity_4
+  - Rd
+  - St
+  - Dr
+  - Ave
+  - Blvd
+  - I-
+  - Astronomical_Twilight_Night
+  parameters:
+    learning_rate: 0.01
+    max_depth: 6
+    n_estimators: 1000
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-05-20 19:06:10.899 | INFO     | __main__:load_data:28 - 🔄 Loading data from Databricks tables...
+2025-05-20 19:08:29.428 | INFO     | __main__:<module>:25 - Configuration loaded:
+2025-05-20 19:08:29.431 | INFO     | __main__:<module>:26 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Start_Lat
+  - Start_Lng
+  - Minute_Freq
+  - Population_County_log
+  - Street_Freq
+  - State_Freq
+  - Pressure_bc
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  num_features:
+  - Timezone_US/Eastern
+  - Timezone_US/Mountain
+  - Timezone_US/Pacific
+  - Weekday_1
+  - Weekday_2
+  - Weekday_3
+  - Weekday_4
+  - Weekday_5
+  - Weekday_6
+  - Station
+  - Stop
+  - Traffic_Signal
+  - Severity_4
+  - Rd
+  - St
+  - Dr
+  - Ave
+  - Blvd
+  - I-
+  - Astronomical_Twilight_Night
+  parameters:
+    learning_rate: 0.01
+    max_depth: 6
+    n_estimators: 1000
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-05-20 19:08:40.764 | INFO     | __main__:load_data:28 - 🔄 Loading data from Databricks tables...
+2025-05-20 19:09:23.664 | INFO     | __main__:<module>:25 - Configuration loaded:
+2025-05-20 19:09:23.668 | INFO     | __main__:<module>:26 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Start_Lat
+  - Start_Lng
+  - Pressure_bc
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  num_features:
+  - Timezone_US/Eastern
+  - Timezone_US/Mountain
+  - Timezone_US/Pacific
+  - Weekday_1
+  - Weekday_2
+  - Weekday_3
+  - Weekday_4
+  - Weekday_5
+  - Weekday_6
+  - Station
+  - Stop
+  - Traffic_Signal
+  - Severity_4
+  - Rd
+  - St
+  - Dr
+  - Ave
+  - Blvd
+  - I-
+  - Astronomical_Twilight_Night
+  parameters:
+    learning_rate: 0.01
+    max_depth: 6
+    n_estimators: 1000
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-05-20 19:09:33.534 | INFO     | __main__:load_data:28 - 🔄 Loading data from Databricks tables...
+2025-05-20 19:10:01.204 | INFO     | __main__:<module>:25 - Configuration loaded:
+2025-05-20 19:10:01.207 | INFO     | __main__:<module>:26 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Start_Lat
+  - Start_Lng
+  - Pressure_bc
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  num_features:
+  - Timezone_US/Eastern
+  - Timezone_US/Mountain
+  - Timezone_US/Pacific
+  - Weekday_1
+  - Weekday_2
+  - Weekday_3
+  - Weekday_4
+  - Weekday_5
+  - Weekday_6
+  - Station
+  - Stop
+  - Traffic_Signal
+  - Severity_4
+  - Rd
+  - St
+  - Dr
+  - Ave
+  - Blvd
+  - I-
+  - Astronomical_Twilight_Night
+  parameters:
+    learning_rate: 0.01
+    max_depth: 6
+    n_estimators: 1000
+  schema_name: corretco
+  target: Severity_4
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-05-20 19:10:07.240 | INFO     | __main__:load_data:28 - 🔄 Loading data from Databricks tables...
+2025-05-20 19:10:08.375 | INFO     | __main__:load_data:37 - ✅ Data successfully loaded.
+2025-05-20 19:11:22.499 | INFO     | __main__:<module>:27 - 🔄 Loading data from Databricks tables...
+2025-05-20 19:11:23.821 | INFO     | __main__:<module>:36 - ✅ Data successfully loaded.
+2025-05-20 19:11:48.538 | INFO     | __main__:load_data:28 - 🔄 Loading data from Databricks tables...
+2025-05-20 19:11:49.614 | INFO     | __main__:load_data:37 - ✅ Data successfully loaded.
+2025-05-20 19:38:44.772 | INFO     | __main__:train:14 - 🔄 Defining preprocessing pipeline...
+2025-05-20 19:38:44.774 | INFO     | __main__:train:19 - ✅ Preprocessing pipeline defined.
+2025-05-20 19:38:44.775 | INFO     | __main__:train:21 - 🚀 Starting training...

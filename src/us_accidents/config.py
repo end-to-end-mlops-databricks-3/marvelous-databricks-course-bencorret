@@ -19,6 +19,7 @@ class ProjectConfig(BaseModel):
     catalog_name: str
     schema_name: str
     cleaned_table_name: str
+    experiment_name: str
     parameters: dict[str, Any]
 
     @classmethod

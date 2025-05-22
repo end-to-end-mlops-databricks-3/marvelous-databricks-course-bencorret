@@ -24,14 +24,12 @@ class DataProcessor:
         self.training_set_address = f"{self.config.catalog_name}.{self.config.schema_name}.train_set"
         self.test_set_address = f"{self.config.catalog_name}.{self.config.schema_name}.test_set"
 
-    def preprocess(self) -> None:
+    def clean_raw_data(self) -> DataFrame:
         """Clean raw dataset, to make it ready for training and testing.
 
         This method performs the following steps:
         1. Selects relevant columns and filters the dataset based on the source.
         2. Cleans and transforms the data, including handling missing values and converting data types.
-        3. Creates new features based on existing data.
-        4. Saves the cleaned DataFrame to a Delta table in the specified catalog and schema.
         """
         self.dataframe.createOrReplaceTempView("raw_accidents")
 
@@ -186,14 +184,93 @@ class DataProcessor:
                 "Astronomical_Twilight",
             ]
         )
+        return clean_df
 
-        # 4 - Create instance variable with cleaned DataFrame
-        clean_df_with_timestamp = clean_df.withColumn(
+    def resample_data(self, df: DataFrame, resampling_threshold: int = 15000) -> DataFrame:
+        """Resample the cleaned dataset.
+
+        Severity type 4 accident are overwhelmingly present in the dataset.
+        We will resample the dataset to balance between severity 4 accidents and less severe types.
+        :param dataframe: The DataFrame to be processed.
+        :param resampling_threshold: Resampling threshold.
+        """
+        # Separate the DataFrame into two based on the "severity_4" column
+        df_true = df.filter("severity_4 = true")
+        df_false = df.filter("severity_4 = false")
+
+        # Count the number of rows in each DataFrame
+        count_true = df_true.count()
+        count_false = df_false.count()
+
+        # Determine the sampling fractions
+        fraction_true = resampling_threshold / count_true if count_true > resampling_threshold else 1.0
+        fraction_false = resampling_threshold / count_false if count_false > resampling_threshold else 1.0
+
+        # Sample the DataFrames
+        if count_true > resampling_threshold:
+            df_true_sampled = df_true.sample(withReplacement=False, fraction=fraction_true, seed=42)
+        else:
+            df_true_sampled = df_true.sample(withReplacement=True, fraction=fraction_true, seed=42)
+
+        if count_false > resampling_threshold:
+            df_false_sampled = df_false.sample(withReplacement=False, fraction=fraction_false, seed=42)
+        else:
+            df_false_sampled = df_false.sample(withReplacement=True, fraction=fraction_false, seed=42)
+
+        # Union the sampled DataFrames
+        df_resampled = df_true_sampled.union(df_false_sampled)
+        return df_resampled
+
+    def preprocess(self) -> None:
+        """Complete the preprocessing.
+
+        This method performs the following steps:
+        1. Creates new features based on existing data.
+        2. Resamples the dataset to balance the severity of accidents.
+        3. Saves the cleaned DataFrame to a Delta table in the specified catalog and schema.
+        """
+        clean_df = self.clean_raw_data()
+        clean_df.createOrReplaceTempView("cleaned_accidents")
+
+        # Select correct features
+        featurized_df = self.spark.sql("""
+            select
+                case when Timezone = 'US/Eastern' then 1 else 0 end as `Timezone_US/Eastern`,
+                case when Timezone = 'US/Mountain' then 1 else 0 end as `Timezone_US/Mountain`,
+                case when Timezone = 'US/Pacific' then 1 else 0 end as `Timezone_US/Pacific`,
+                case when Weekday = 1 then 1 else 0 end as `Weekday_1`,
+                case when Weekday = 2 then 1 else 0 end as `Weekday_2`,
+                case when Weekday = 3 then 1 else 0 end as `Weekday_3`,
+                case when Weekday = 4 then 1 else 0 end as `Weekday_4`,
+                case when Weekday = 5 then 1 else 0 end as `Weekday_5`,
+                case when Weekday = 6 then 1 else 0 end as `Weekday_6`,
+                cast(Station as int) as Station,
+                cast(Stop as int) as Stop,
+                cast(Traffic_Signal as int) as Traffic_Signal,
+                case when Severity = 4 then 1 else 0 end as `Severity_4`,
+                case when contains(Street, 'Rd ') then 1 else 0 end as `Rd`,
+                case when contains(Street, 'St ') then 1 else 0 end as `St`,
+                case when contains(Street, 'Dr ') then 1 else 0 end as `Dr`,
+                case when contains(Street, 'Ave ') then 1 else 0 end as `Ave`,
+                case when contains(Street, 'Blvd ') then 1 else 0 end as `Blvd`,
+                case when contains(Street, 'I- ') then 1 else 0 end as `I-`,
+                case when Astronomical_Twilight = 'Night' then 1 else 0 end as Astronomical_Twilight_Night,
+                Start_Lat,
+                Start_Lng,
+                Pressure_in as Pressure_bc
+            from cleaned_accidents
+        """)
+
+        # Resample the dataset: over-presence of severity 4 accidents
+        resampled_df = self.resample_data(featurized_df)
+
+        # Save this dataframe to a UC table
+        resampled_df_with_timestamp = resampled_df.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
-        clean_df_with_timestamp.write.mode("overwrite").saveAsTable(self.clean_df_address)
+        resampled_df_with_timestamp.write.mode("overwrite").saveAsTable(self.clean_df_address)
 
-    def split_data(self, test_size: float = 0.2, seed: int = 42) -> tuple[DataFrame, DataFrame]:
+    def split_data(self, test_size: float = 0.3, seed: int = 42) -> tuple[DataFrame, DataFrame]:
         """Split the DataFrame (self.clean_df) into training and test sets using PySpark's randomSplit.
 
         :param test_size: The proportion of the dataset to include in the test split.
