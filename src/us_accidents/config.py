@@ -20,6 +20,8 @@ class ProjectConfig(BaseModel):
     schema_name: str
     cleaned_table_name: str
     experiment_name: str
+    model_names: dict[str, Any]
+    endpoint_names: dict[str, Any]
     parameters: dict[str, Any]
 
     @classmethod

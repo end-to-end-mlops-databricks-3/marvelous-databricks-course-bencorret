@@ -12,6 +12,13 @@ dev:
   cleaned_table_name: us_accidents_cleaned
 
 experiment_name: /Shared/us-accidents-basic
+model_names:
+  model1: us_accidents_model
+  model2: us_accidents_model_and_feature
+
+endpoint_names:
+  endpoint1: us_accidents_model_serving
+  endpoint2: us_accidents_model_and_feature_serving
 
 parameters:
   n_estimators: [10, 50, 100]
