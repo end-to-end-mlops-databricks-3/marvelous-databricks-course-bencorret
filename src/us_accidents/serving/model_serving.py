@@ -19,7 +19,7 @@ class ModelServing:
         :param model_name: Name of the model to be served
         :param endpoint_name: Name of the serving endpoint
         """
-        self.workspace_client = WorkspaceClient()
+        self.workspace = WorkspaceClient()
         self.model_name = model_name
         self.endpoint_name = endpoint_name
 
