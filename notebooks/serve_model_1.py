@@ -12,23 +12,21 @@
 # COMMAND ----------
 
 import os
-import time
 import sys
+import time
 from pathlib import Path
 
-import mlflow
+import pandas as pd
 import requests
 import yaml
-import pandas as pd
-from dotenv import load_dotenv
 from loguru import logger
-from pyspark.sql import SparkSession
 from pyspark.dbutils import DBUtils
+from pyspark.sql import SparkSession
 
 # Add the src directory to the Python path
 sys.path.append(str(Path.cwd().parent / "src"))
 
-from us_accidents.config import ProjectConfig, Tags
+from us_accidents.config import ProjectConfig
 from us_accidents.serving.model_serving import ModelServing
 
 # spark session
@@ -54,9 +52,7 @@ logger.info(yaml.dump(config, default_flow_style=False))
 # COMMAND ----------
 
 logger.info("Initializing ModelServing class ...")
-model_serving = ModelServing(
-    model_name = f"{catalog_name}.{schema_name}.{model_name}", endpoint_name = endpoint_name
-)
+model_serving = ModelServing(model_name=f"{catalog_name}.{schema_name}.{model_name}", endpoint_name=endpoint_name)
 
 # COMMAND ----------
 
@@ -90,7 +86,7 @@ required_columns = [
     "Astronomical_Twilight_Night",
     "Start_Lat",
     "Start_Lng",
-    "Pressure_bc"
+    "Pressure_bc",
 ]
 
 # Sample 1000 records from the training set
@@ -112,37 +108,12 @@ dataframe_records = [[record] for record in sampled_records]
 
 # Call the endpoint with one sample record
 
-"""
-Each dataframe record in the request body should be list of json with columns looking like:
 
-[{'Timezone_US/Eastern': 0,
-   'Timezone_US/Mountain': 0,
-   'Timezone_US/Pacific': 1,
-   'Weekday_1': 0,
-   'Weekday_2': 0,
-   'Weekday_3': 1,
-   'Weekday_4': 0,
-   'Weekday_5': 0,
-   'Weekday_6': 0,
-   'Station': 0,
-   'Stop': 0,
-   'Traffic_Signal': 0,
-   'Severity_4': 0,
-   'Rd': 0,
-   'St': 0,
-   'Dr': 0,
-   'Ave': 0,
-   'Blvd': 0,
-   'I-': 0,
-   'Astronomical_Twilight_Night': 0,
-   'Start_Lat': 47.97825,
-   'Start_Lng': -122.177175,
-   'Pressure_bc': 29.52}]
-"""
+def call_endpoint(record: list) -> tuple:
+    """Call the model serving endpoint with a given input record.
 
-def call_endpoint(record):
-    """
-    Calls the model serving endpoint with a given input record.
+    This function sends a POST request to the specified serving endpoint with the provided record.
+    :param record: A single record to be sent to the endpoint.
     """
     serving_endpoint = f"https://{os.environ['DBR_HOST']}/serving-endpoints/{endpoint_name}/invocations"
 
