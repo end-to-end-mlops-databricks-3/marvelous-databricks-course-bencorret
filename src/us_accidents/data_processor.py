@@ -338,3 +338,7 @@ def generate_synthetic_data(df: DataFrame, num_rows: int = 500) -> DataFrame:
     synthetic_data = test_data.filter((test_data.Start_Lat >= rand_start_lat_min) & (test_data.Start_Lat <= rand_start_lat_max))
     
     return synthetic_data
+
+def generate_test_data(df: DataFrame, drift: bool = False, num_rows: int = 100) -> DataFrame:
+    """Generate test data matching input DataFrame distributions."""
+    return generate_synthetic_data(df, drift, num_rows)
