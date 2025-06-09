@@ -16,12 +16,9 @@ is_test = args.is_test
 logger.info("Configuration loaded:")
 logger.info(yaml.dump(config, default_flow_style=False))
 
-# Load the house prices dataset
+# Load the us accidents test set from the catalog
 spark = SparkSession.builder.getOrCreate()
-
-# Read test set from dev catalog
-env_ugly = "dev" # This is a placeholder for the environment variable
-df = spark.read.table(f"mlops_{env_ugly}.corretco.test_set")
+df = spark.read.table(f"{config.catalog_name}.{config.schema_name}.test_set")
 
 if is_test==0:
     # Generate synthetic data.
