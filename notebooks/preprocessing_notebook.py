@@ -56,7 +56,8 @@ raw_df = spark.read.format("csv").option("header", "true").option("separator", "
 
 # COMMAND ----------
 
-new_data = generate_synthetic_data(raw_df, num_rows=100)
+test_data = spark.read.table("mlops_dev.corretco.test_set")
+new_data = generate_synthetic_data(test_data, num_rows=100)
 display(new_data)
 
 # COMMAND ----------
