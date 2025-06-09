@@ -335,6 +335,16 @@ def generate_synthetic_data(df: DataFrame, num_rows: int = 500) -> DataFrame:
     synthetic_data = pd.DataFrame()
     df = df.toPandas()  # Convert Spark DataFrame to Pandas DataFrame for processing
 
+    # Convert relevant numeric columns to float64
+    # This is necessary for compatibility with PySpark DataFrame creation
+    int_columns = {
+        "Start_Lat",
+        "Start_Lng",
+        "Pressure_bc"
+    }
+    for col in int_columns.intersection(df.columns):
+        synthetic_data[col] = synthetic_data[col].astype(np.float64)
+
     for column in df.columns:
         if column == "Id":
             continue
