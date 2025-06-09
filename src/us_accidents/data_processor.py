@@ -1,6 +1,4 @@
-import pandas as pd
-import numpy as np
-import time
+import random
 
 from pyspark.sql import functions as F
 from pyspark.sql.types import NumericType, StringType, BooleanType, TimestampType
@@ -332,44 +330,11 @@ def generate_synthetic_data(df: DataFrame, num_rows: int = 500) -> DataFrame:
     :return: DataFrame containing generated synthetic data
     """
     spark = df.sparkSession
-    synthetic_data = pd.DataFrame()
-    df = df.toPandas()  # Convert Spark DataFrame to Pandas DataFrame for processing
+    rand_start_lat = random.uniform(26, 47)
+    rand_start_lat_min = rand_start_lat - 1
+    rand_start_lat_max = rand_start_lat + 1
 
-    for column in df.columns:
-        if column == "Id":
-            continue
-
-        if pd.api.types.is_numeric_dtype(df[column]):
-            synthetic_data[column] = np.random.normal(df[column].mean(), df[column].std(), num_rows)
-
-        elif pd.api.types.is_categorical_dtype(df[column]) or pd.api.types.is_object_dtype(df[column]):
-            synthetic_data[column] = np.random.choice(
-                df[column].unique(), num_rows, p=df[column].value_counts(normalize=True)
-            )
-
-        elif pd.api.types.is_datetime64_any_dtype(df[column]):
-            min_date, max_date = df[column].min(), df[column].max()
-            synthetic_data[column] = pd.to_datetime(
-                np.random.randint(min_date.value, max_date.value, num_rows)
-                if min_date < max_date
-                else [min_date] * num_rows
-            )
-
-        else:
-            synthetic_data[column] = np.random.choice(df[column], num_rows)
-
-    # Convert relevant numeric columns to float64
-    # This is necessary for compatibility with PySpark DataFrame creation
-    int_columns = {
-        "Start_Lat",
-        "Start_Lng",
-        "Pressure_bc"
-    }
-    for col in int_columns.intersection(df.columns):
-        synthetic_data[col] = synthetic_data[col].astype(np.float64)
-
-    timestamp_base = int(time.time() * 1000)
-    synthetic_data["Id"] = [str(timestamp_base + i) for i in range(num_rows)]
-
-    synthetic_data_spark = spark.createDataFrame(synthetic_data)
-    return synthetic_data_spark
+    test_data = spark.read.table("mlops_dev.corretco.test_set")
+    synthetic_data = test_data.filter((test_data.Start_Lat >= rand_start_lat_min) & (test_data.Start_Lat <= rand_start_lat_max))
+    
+    return synthetic_data
