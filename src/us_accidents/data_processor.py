@@ -1,4 +1,6 @@
-import random
+import pandas as pd
+import numpy as np
+import time
 
 from pyspark.sql import functions as F
 from pyspark.sql.types import NumericType, StringType, BooleanType, TimestampType
@@ -319,84 +321,45 @@ class DataProcessor:
             "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
         )
 
-def generate_synthetic_data(df: DataFrame, drift: bool = False, num_rows: int = 500) -> DataFrame:
-    """Generate synthetic data matching input DataFrame distributions with optional drift.
+def generate_synthetic_data(df: DataFrame, num_rows: int = 500) -> DataFrame:
+    """Generate synthetic data matching input DataFrame distributions.
 
     Creates artificial dataset replicating statistical patterns from source columns including numeric,
-    categorical, and datetime types. Supports intentional data drift for specific features when enabled.
+    categorical, and datetime types.
 
     :param df: Source DataFrame containing original data distributions
-    :param drift: Flag to activate synthetic data drift injection
     :param num_rows: Number of synthetic records to generate
     :return: DataFrame containing generated synthetic data
     """
     spark = df.sparkSession
-    schema = df.schema
-    columns = df.columns
+    synthetic_data = pd.DataFrame()
+    df = df.toPandas()  # Convert Spark DataFrame to Pandas DataFrame for processing
 
-    # Collect value distributions for categorical and boolean columns
-    value_maps = {}
-    for field in schema:
-        if isinstance(field.dataType, (StringType, BooleanType)):
-            values = df.select(field.name).distinct().rdd.flatMap(lambda x: x).collect()
-            value_maps[field.name] = values
+    for column in df.columns:
+        if column == "Id":
+            continue
 
-    # Collect min/max for numeric columns
-    stats = df.agg(
-        *[F.min(c).alias(f"{c}_min") for c in columns if isinstance(df.schema[c].dataType, NumericType)],
-        *[F.max(c).alias(f"{c}_max") for c in columns if isinstance(df.schema[c].dataType, NumericType)]
-    ).collect()[0]
-    num_cols = [c for c in columns if isinstance(df.schema[c].dataType, NumericType)]
+        if pd.api.types.is_numeric_dtype(df[column]):
+            synthetic_data[column] = np.random.normal(df[column].mean(), df[column].std(), num_rows)
 
-    # Collect min/max for timestamp columns
-    ts_cols = [c for c in columns if isinstance(df.schema[c].dataType, TimestampType)]
-    ts_stats = {}
-    for c in ts_cols:
-        min_ts, max_ts = df.select(F.min(c), F.max(c)).first()
-        ts_stats[c] = (min_ts, max_ts)
+        elif pd.api.types.is_categorical_dtype(df[column]) or pd.api.types.is_object_dtype(df[column]):
+            synthetic_data[column] = np.random.choice(
+                df[column].unique(), num_rows, p=df[column].value_counts(normalize=True)
+            )
 
-    # Generate synthetic rows
-    rows = []
-    for _ in range(num_rows):
-        row = []
-        for field in schema:
-            name = field.name
-            dtype = field.dataType
-            if isinstance(dtype, NumericType):
-                min_val = stats[f"{name}_min"]
-                max_val = stats[f"{name}_max"]
-                if min_val is None or max_val is None:
-                    row.append(None)
-                else:
-                    # Optionally add drift
-                    if drift and random.random() < 0.2:
-                        val = float(max_val) + random.uniform(1, 10)
-                    else:
-                        val = random.uniform(float(min_val), float(max_val))
-                    row.append(type(min_val)(val))
-            elif isinstance(dtype, BooleanType):
-                vals = value_maps.get(name, [True, False])
-                row.append(random.choice(vals))
-            elif isinstance(dtype, StringType):
-                vals = value_maps.get(name, [""])
-                row.append(random.choice(vals))
-            elif isinstance(dtype, TimestampType):
-                min_ts, max_ts = ts_stats[name]
-                if min_ts and max_ts:
-                    min_epoch = int(min_ts.timestamp())
-                    max_epoch = int(max_ts.timestamp())
-                    rand_epoch = random.randint(min_epoch, max_epoch)
-                    row.append(F.from_unixtime(F.lit(rand_epoch)).cast("timestamp"))
-                else:
-                    row.append(None)
-            else:
-                row.append(None)
-        rows.append(tuple(row))
+        elif pd.api.types.is_datetime64_any_dtype(df[column]):
+            min_date, max_date = df[column].min(), df[column].max()
+            synthetic_data[column] = pd.to_datetime(
+                np.random.randint(min_date.value, max_date.value, num_rows)
+                if min_date < max_date
+                else [min_date] * num_rows
+            )
 
-    # Create DataFrame
-    synthetic_df = spark.createDataFrame(rows, schema=schema)
-    # If timestamp columns, convert from column expressions to actual timestamps
-    for c in ts_cols:
-        if synthetic_df.schema[c].dataType != TimestampType():
-            synthetic_df = synthetic_df.withColumn(c, F.col(c).cast("timestamp"))
-    return synthetic_df
+        else:
+            synthetic_data[column] = np.random.choice(df[column], num_rows)
+
+    timestamp_base = int(time.time() * 1000)
+    synthetic_data["Id"] = [str(timestamp_base + i) for i in range(num_rows)]
+
+    synthetic_data_spark = spark.createDataFrame(synthetic_data)
+    return synthetic_data_spark
