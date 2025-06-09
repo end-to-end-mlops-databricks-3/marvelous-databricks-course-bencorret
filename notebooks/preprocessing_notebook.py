@@ -3,11 +3,11 @@
 
 # COMMAND ----------
 
-# %pip install -e ..
+# MAGIC %pip install -e ..
 
 # COMMAND ----------
 
-# %restart_python
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -26,7 +26,7 @@ from marvelous.logging import setup_logging
 from marvelous.timer import Timer
 
 from us_accidents.config import ProjectConfig
-from us_accidents.data_processor import DataProcessor
+from us_accidents.data_processor import DataProcessor, generate_synthetic_data
 
 # Load configuration
 config_path = os.path.abspath(os.path.join(Path.cwd(), "..", "project_config.yaml"))
@@ -43,7 +43,7 @@ logger.info(yaml.dump(config, default_flow_style=False))
 # Define impoprtant variables
 catalog_name = config.catalog_name
 schema_name = config.schema_name
-data_file_path = f"/Volumes/{catalog_name}/{schema_name}/data/US_Accidents_March23_short.csv"
+data_file_path = f"/Volumes/{catalog_name}/{schema_name}/data/US_Accidents_March23.csv"
 
 # COMMAND ----------
 
@@ -53,6 +53,11 @@ spark = SparkSession.builder.appName("US Accidents Data Preprocessing").getOrCre
 
 logger.info("Loading raw dataframe")
 raw_df = spark.read.format("csv").option("header", "true").option("separator", ",").load(data_file_path)
+
+# COMMAND ----------
+
+new_data = generate_synthetic_data(raw_df, num_rows=100)
+display(new_data)
 
 # COMMAND ----------
 
