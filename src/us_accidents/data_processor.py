@@ -8,6 +8,18 @@ from pyspark.sql.functions import col, current_timestamp, lit, lower, to_utc_tim
 
 from us_accidents.config import ProjectConfig
 
+def table_exists(spark: SparkSession, table_name: str) -> bool:
+    """Check if a table exists in the Spark catalog.
+
+    :param spark: Spark session to be used for checking the table.
+    :param table_name: The name of the table to check.
+    :return: True if the table exists, False otherwise.
+    """
+    try:
+        spark.catalog.getTable(table_name)
+        return True
+    except Exception:
+        return False
 
 class DataProcessor:
     """A class for preprocessing and managing DataFrame operations.
@@ -199,9 +211,9 @@ class DataProcessor:
         :param dataframe: The DataFrame to be processed.
         :param resampling_threshold: Resampling threshold.
         """
-        # Separate the DataFrame into two based on the "severity_4" column
-        df_true = df.filter("severity_4 = true")
-        df_false = df.filter("severity_4 = false")
+        # Separate the DataFrame into two based on the "Severity" column
+        df_true = df.filter("Severity = 4")
+        df_false = df.filter("Severity <> 4")
 
         # Count the number of rows in each DataFrame
         count_true = df_true.count()
@@ -226,7 +238,7 @@ class DataProcessor:
         df_resampled = df_true_sampled.union(df_false_sampled)
         return df_resampled
 
-    def preprocess(self) -> None:
+    def preprocess(self, write_mode:str) -> None:
         """Complete the preprocessing.
 
         This method performs the following steps:
@@ -235,45 +247,15 @@ class DataProcessor:
         3. Saves the cleaned DataFrame to a Delta table in the specified catalog and schema.
         """
         clean_df = self.clean_raw_data()
-        clean_df.createOrReplaceTempView("cleaned_accidents")
-
-        # Select correct features
-        featurized_df = self.spark.sql("""
-            select
-                case when Timezone = 'US/Eastern' then 1 else 0 end as `Timezone_US/Eastern`,
-                case when Timezone = 'US/Mountain' then 1 else 0 end as `Timezone_US/Mountain`,
-                case when Timezone = 'US/Pacific' then 1 else 0 end as `Timezone_US/Pacific`,
-                case when Weekday = 1 then 1 else 0 end as `Weekday_1`,
-                case when Weekday = 2 then 1 else 0 end as `Weekday_2`,
-                case when Weekday = 3 then 1 else 0 end as `Weekday_3`,
-                case when Weekday = 4 then 1 else 0 end as `Weekday_4`,
-                case when Weekday = 5 then 1 else 0 end as `Weekday_5`,
-                case when Weekday = 6 then 1 else 0 end as `Weekday_6`,
-                cast(Station as int) as Station,
-                cast(Stop as int) as Stop,
-                cast(Traffic_Signal as int) as Traffic_Signal,
-                case when Severity = 4 then 1 else 0 end as `Severity_4`,
-                case when contains(Street, 'Rd ') then 1 else 0 end as `Rd`,
-                case when contains(Street, 'St ') then 1 else 0 end as `St`,
-                case when contains(Street, 'Dr ') then 1 else 0 end as `Dr`,
-                case when contains(Street, 'Ave ') then 1 else 0 end as `Ave`,
-                case when contains(Street, 'Blvd ') then 1 else 0 end as `Blvd`,
-                case when contains(Street, 'I- ') then 1 else 0 end as `I-`,
-                case when Astronomical_Twilight = 'Night' then 1 else 0 end as Astronomical_Twilight_Night,
-                Start_Lat,
-                Start_Lng,
-                Pressure_in as Pressure_bc
-            from cleaned_accidents
-        """)
 
         # Resample the dataset: over-presence of severity 4 accidents
-        resampled_df = self.resample_data(featurized_df)
+        resampled_df = self.resample_data(clean_df)
 
         # Save this dataframe to a UC table
-        resampled_df_with_timestamp = resampled_df.withColumn(
-            "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
+        resampled_df = (resampled_df
+                        .withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC"))
         )
-        resampled_df_with_timestamp.write.mode("overwrite").saveAsTable(self.clean_df_address)
+        resampled_df.write.mode(write_mode).saveAsTable(self.clean_df_address)
 
     def split_data(self, test_size: float = 0.3, seed: int = 42) -> tuple[DataFrame, DataFrame]:
         """Split the DataFrame (self.clean_df) into training and test sets using PySpark's randomSplit.
@@ -303,6 +285,13 @@ class DataProcessor:
 
         train_set_with_timestamp.write.mode("append").saveAsTable(self.training_set_address)
         test_set_with_timestamp.write.mode("append").saveAsTable(self.test_set_address)
+
+        train_table_exists = table_exists(self.spark, self.training_set_address)
+        test_table_exists = table_exists(self.spark, self.test_set_address)
+        if not train_table_exists:
+            self.spark.sql(f"ALTER TABLE {self.training_set_address} ADD COLUMNS Id BIGINT GENERATED ALWAYS AS IDENTITY")
+        if not test_table_exists:
+            self.spark.sql(f"ALTER TABLE {self.test_set_address} ADD COLUMNS Id BIGINT GENERATED ALWAYS AS IDENTITY")
 
     def enable_change_data_feed(self) -> None:
         """Enable Change Data Feed for train and test set tables.

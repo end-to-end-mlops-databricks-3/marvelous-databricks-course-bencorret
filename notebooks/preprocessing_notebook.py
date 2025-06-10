@@ -68,7 +68,7 @@ with Timer() as preprocess_timer:
     data_processor = DataProcessor(spark=spark, config=config, dataframe=raw_df)
 
     logger.info("Preprocess data + save table to UC")
-    data_processor.preprocess()
+    data_processor.preprocess(write_mode="overwrite")
 
 
 # COMMAND ----------

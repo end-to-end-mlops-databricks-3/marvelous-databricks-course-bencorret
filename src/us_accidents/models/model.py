@@ -81,6 +81,7 @@ class BasicModel:
     def train(self) -> None:
         """Train the model."""
         logger.info("🔄 Building random forest classifier...")
+
         clf_base = RandomForestClassifier()
         grid = {
             "n_estimators": self.parameters["n_estimators"],
