@@ -22,6 +22,9 @@ from pyspark.sql import functions as F
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
 
 from us_accidents.config import ProjectConfig, Tags
 
@@ -78,9 +81,33 @@ class BasicModel:
         self.y_test = self.test_set[self.target]
         logger.info("✅ Data successfully loaded.")
 
+    def prepare_features(self) -> None:
+        """Encode categorical features and define a preprocessing pipeline.
+
+        Creates a ColumnTransformer for one-hot encoding categorical features while passing through numerical
+        features. Constructs a pipeline combining preprocessing and LightGBM regression model.
+        """
+        logger.info("🔄 Defining preprocessing pipeline...")
+        self.preprocessor = ColumnTransformer(
+            transformers=[("cat", OneHotEncoder(handle_unknown="ignore"), self.cat_features)], remainder="passthrough"
+        )
+
+        self.pipeline = Pipeline(
+            steps=[("preprocessor", self.preprocessor), ("regressor", LGBMRegressor(**self.parameters))]
+        )
+        logger.info("✅ Preprocessing pipeline defined.")
+
     def train(self) -> None:
         """Train the model."""
         logger.info("🔄 Building random forest classifier...")
+
+        # Step 1: Convert categorical values to indices
+        indexer = StringIndexer(inputCol="Color", outputCol="ColorIndex")
+        indexed_df = indexer.fit(df).transform(df)
+
+        # Step 2: Apply OneHotEncoder
+        encoder = OneHotEncoder(inputCols=["ColorIndex"], outputCols=["ColorEncoded"])
+        encoded_df = encoder.fit(indexed_df).transform(indexed_df)
 
         clf_base = RandomForestClassifier()
         grid = {
