@@ -8,18 +8,6 @@ from pyspark.sql.functions import col, current_timestamp, lit, lower, to_utc_tim
 
 from us_accidents.config import ProjectConfig
 
-def table_exists(spark: SparkSession, table_name: str) -> bool:
-    """Check if a table exists in the Spark catalog.
-
-    :param spark: Spark session to be used for checking the table.
-    :param table_name: The name of the table to check.
-    :return: True if the table exists, False otherwise.
-    """
-    try:
-        spark.catalog.getTable(table_name)
-        return True
-    except Exception:
-        return False
 
 class DataProcessor:
     """A class for preprocessing and managing DataFrame operations.
@@ -308,20 +296,17 @@ class DataProcessor:
         :param train_set: The training DataFrame to be saved.
         :param test_set: The test DataFrame to be saved.
         """
-        train_set_with_timestamp = train_set.withColumn(
-            "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
-        )
-        test_set_with_timestamp = test_set.withColumn(
-            "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
-        )
+        train_set = (train_set
+                                    .withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC"))
+                                    .withColumn("Id", F.monotonically_increasing_id())
+                                    )
+        test_set = (test_set
+                                    .withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC"))
+                                    .withColumn("Id", F.monotonically_increasing_id())
+                                    )
 
-        train_set_with_timestamp.write.mode(write_mode).saveAsTable(self.training_set_address)
-        test_set_with_timestamp.write.mode(write_mode).saveAsTable(self.test_set_address)
-
-        if not self.train_table_exists:
-            self.spark.sql(f"ALTER TABLE {self.training_set_address} ADD COLUMNS (Id BIGINT NOT NULL PRIMARY KEY DEFAULT nextval('serial'))")
-        if not self.test_table_exists:
-            self.spark.sql(f"ALTER TABLE {self.test_set_address} ADD COLUMNS (Id BIGINT NOT NULL PRIMARY KEY DEFAULT nextval('serial'))")
+        train_set.write.mode(write_mode).saveAsTable(self.training_set_address)
+        test_set.write.mode(write_mode).saveAsTable(self.test_set_address)
 
     def enable_change_data_feed(self) -> None:
         """Enable Change Data Feed for train and test set tables.
