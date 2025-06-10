@@ -319,9 +319,9 @@ class DataProcessor:
         test_set_with_timestamp.write.mode(write_mode).saveAsTable(self.test_set_address)
 
         if not self.train_table_exists:
-            self.spark.sql(f"ALTER TABLE {self.training_set_address} ADD COLUMNS Id BIGINT GENERATED ALWAYS AS IDENTITY")
+            self.spark.sql(f"ALTER TABLE {self.training_set_address} ADD COLUMNS (Id BIGINT NOT NULL PRIMARY KEY DEFAULT nextval('serial'))")
         if not self.test_table_exists:
-            self.spark.sql(f"ALTER TABLE {self.test_set_address} ADD COLUMNS Id BIGINT GENERATED ALWAYS AS IDENTITY")
+            self.spark.sql(f"ALTER TABLE {self.test_set_address} ADD COLUMNS (Id BIGINT NOT NULL PRIMARY KEY DEFAULT nextval('serial'))")
 
     def enable_change_data_feed(self) -> None:
         """Enable Change Data Feed for train and test set tables.
