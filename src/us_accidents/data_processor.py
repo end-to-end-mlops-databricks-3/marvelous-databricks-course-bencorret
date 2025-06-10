@@ -28,8 +28,6 @@ class DataProcessor:
         self.clean_df_address = f"{self.config.catalog_name}.{self.config.schema_name}.{self.config.cleaned_table_name}"
         self.training_set_address = f"{self.config.catalog_name}.{self.config.schema_name}.train_set"
         self.test_set_address = f"{self.config.catalog_name}.{self.config.schema_name}.test_set"
-        self.train_table_exists = table_exists(self.spark, self.training_set_address)
-        self.test_table_exists = table_exists(self.spark, self.test_set_address)
 
     def clean_raw_data(self) -> DataFrame:
         """Clean raw dataset, to make it ready for training and testing.
