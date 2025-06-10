@@ -238,7 +238,7 @@ class DataProcessor:
         df_resampled = df_true_sampled.union(df_false_sampled)
         return df_resampled
 
-    def preprocess(self) -> None:
+    def preprocess(self, write_mode:str="append") -> None:
         """Complete the preprocessing.
 
         This method performs the following steps:
@@ -285,7 +285,7 @@ class DataProcessor:
         resampled_df_with_timestamp = resampled_df.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
-        resampled_df_with_timestamp.write.mode("overwrite").saveAsTable(self.clean_df_address)
+        resampled_df_with_timestamp.write.mode(write_mode).saveAsTable(self.clean_df_address)
 
     def split_data(self, test_size: float = 0.3, seed: int = 42) -> tuple[DataFrame, DataFrame]:
         """Split the DataFrame (self.clean_df) into training and test sets using PySpark's randomSplit.
@@ -300,7 +300,7 @@ class DataProcessor:
         train_df, test_df = cleaned_table.randomSplit([train_size, test_size], seed=seed)
         return train_df, test_df
 
-    def save_to_catalog(self, train_set: DataFrame, test_set: DataFrame) -> None:
+    def save_to_catalog(self, train_set: DataFrame, test_set: DataFrame, write_mode:str="append") -> None:
         """Save the train and test sets into Databricks tables.
 
         :param train_set: The training DataFrame to be saved.
@@ -313,8 +313,8 @@ class DataProcessor:
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
 
-        train_set_with_timestamp.write.mode("append").saveAsTable(self.training_set_address)
-        test_set_with_timestamp.write.mode("append").saveAsTable(self.test_set_address)
+        train_set_with_timestamp.write.mode(write_mode).saveAsTable(self.training_set_address)
+        test_set_with_timestamp.write.mode(write_mode).saveAsTable(self.test_set_address)
 
         train_table_exists = table_exists(self.spark, self.training_set_address)
         test_table_exists = table_exists(self.spark, self.test_set_address)
