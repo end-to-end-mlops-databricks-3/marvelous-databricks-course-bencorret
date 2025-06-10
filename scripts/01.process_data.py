@@ -21,13 +21,13 @@ spark = SparkSession.builder.getOrCreate()
 df = spark.read.table(f"{config.catalog_name}.{config.schema_name}.test_set")
 
 if is_test==0:
-    # Generate synthetic data.
+    # Selects random data present in the test set
     # This is mimicking a new data arrival. In real world, this would be a new batch of data.
     # df is passed to infer schema
     new_data = generate_synthetic_data(df, num_rows=100)
     logger.info("Synthetic data generated.")
 else:
-    # Generate synthetic data
+    # Selects random data present in the test set
     # This is mimicking a new data arrival. This is a valid example for integration testing.
     new_data = generate_test_data(df, num_rows=100)
     logger.info("Test data generated.")
