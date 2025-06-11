@@ -11,7 +11,7 @@ args = create_parser()
 
 root_path = args.root_path
 is_test = args.is_test
-config_path = f"{root_path}/files/project_config.yml"
+config_path = f"{root_path}/files/project_config.yaml"
 
 spark = SparkSession.builder.getOrCreate()
 dbutils = DBUtils(spark)

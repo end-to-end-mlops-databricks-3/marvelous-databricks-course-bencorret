@@ -9,7 +9,7 @@ from us_accidents.data_processor import DataProcessor, generate_synthetic_data, 
 args = create_parser()
 
 root_path = args.root_path
-config_path = f"{root_path}/files/project_config.yml"
+config_path = f"{root_path}/files/project_config.yaml"
 config = ProjectConfig.from_yaml(config_path=config_path, env=args.env)
 is_test = args.is_test
 
