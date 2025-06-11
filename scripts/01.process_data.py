@@ -32,7 +32,7 @@ else:
     logger.info("Test data generated.")
 
 # Initialize DataProcessor
-data_processor = DataProcessor(new_data, config, spark)
+data_processor = DataProcessor(dataframe=new_data, config=config, spark=spark)
 
 # Preprocess the data
 data_processor.preprocess()

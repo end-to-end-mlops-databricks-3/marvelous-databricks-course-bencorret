@@ -13,7 +13,7 @@ class DataProcessor:
     This class handles data preprocessing, splitting, and saving to Databricks tables.
     """
 
-    def __init__(self, spark: SparkSession, config: ProjectConfig, dataframe: DataFrame) -> None:
+    def __init__(self, dataframe: DataFrame, config: ProjectConfig, spark: SparkSession) -> None:
         """Initialize the DataProcessor with a Spark session, configuration, and DataFrame.
 
         :param spark: Spark session to be used for DataFrame operations.
