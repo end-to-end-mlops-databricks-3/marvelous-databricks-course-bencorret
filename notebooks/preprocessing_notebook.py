@@ -26,7 +26,7 @@ from marvelous.logging import setup_logging
 from marvelous.timer import Timer
 
 from us_accidents.config import ProjectConfig
-from us_accidents.data_processor import DataProcessor, generate_synthetic_data
+from us_accidents.data_processor import DataProcessor
 
 # Load configuration
 config_path = os.path.abspath(os.path.join(Path.cwd(), "..", "project_config.yaml"))

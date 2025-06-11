@@ -1,7 +1,7 @@
 import random
 
-from pyspark.sql import functions as F
 from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import functions as F
 from pyspark.sql.functions import col, current_timestamp, lit, lower, to_utc_timestamp, when
 
 from us_accidents.config import ProjectConfig
@@ -224,7 +224,7 @@ class DataProcessor:
         df_resampled = df_true_sampled.union(df_false_sampled)
         return df_resampled
 
-    def preprocess(self, write_mode:str="append") -> None:
+    def preprocess(self, write_mode: str = "append") -> None:
         """Complete the preprocessing.
 
         This method performs the following steps:
@@ -286,20 +286,18 @@ class DataProcessor:
         train_df, test_df = cleaned_table.randomSplit([train_size, test_size], seed=seed)
         return train_df, test_df
 
-    def save_to_catalog(self, train_set: DataFrame, test_set: DataFrame, write_mode:str="append") -> None:
+    def save_to_catalog(self, train_set: DataFrame, test_set: DataFrame, write_mode: str = "append") -> None:
         """Save the train and test sets into Databricks tables.
 
         :param train_set: The training DataFrame to be saved.
         :param test_set: The test DataFrame to be saved.
         """
-        train_set = (train_set
-                        .withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC"))
-                        .withColumn("Id", F.monotonically_increasing_id())
-                        )
-        test_set = (test_set
-                        .withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC"))
-                        .withColumn("Id", F.monotonically_increasing_id())
-                        )
+        train_set = train_set.withColumn(
+            "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
+        ).withColumn("Id", F.monotonically_increasing_id())
+        test_set = test_set.withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")).withColumn(
+            "Id", F.monotonically_increasing_id()
+        )
 
         train_set.write.mode(write_mode).saveAsTable(self.training_set_address)
         test_set.write.mode(write_mode).saveAsTable(self.test_set_address)
@@ -319,6 +317,7 @@ class DataProcessor:
             "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
         )
 
+
 def generate_synthetic_data(spark: SparkSession, config: ProjectConfig, num_rows: int = 500) -> DataFrame:
     """Generate synthetic data matching input DataFrame distributions.
 
@@ -337,12 +336,12 @@ def generate_synthetic_data(spark: SparkSession, config: ProjectConfig, num_rows
     rand_start_lat_max = rand_start_lat + 1
 
     test_data = spark.read.table(df)
-    synthetic_data = (test_data
-                      .filter((test_data.Start_Lat >= rand_start_lat_min) & (test_data.Start_Lat <= rand_start_lat_max))
-                      .limit(num_rows)
-                      )
-    
+    synthetic_data = test_data.filter(
+        (test_data.Start_Lat >= rand_start_lat_min) & (test_data.Start_Lat <= rand_start_lat_max)
+    ).limit(num_rows)
+
     return synthetic_data
+
 
 def generate_test_data(spark: SparkSession, config: ProjectConfig, num_rows: int = 500) -> DataFrame:
     """Generate test data matching input DataFrame distributions."""

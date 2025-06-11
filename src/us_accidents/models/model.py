@@ -17,7 +17,7 @@ from loguru import logger
 from mlflow import MlflowClient
 from mlflow.data.dataset_source import DatasetSource
 from mlflow.models import infer_signature
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -201,7 +201,7 @@ class BasicModel:
 
         # Return predictions as a DataFrame
         return predictions
-    
+
     def model_improved(self, test_set: DataFrame) -> bool:
         """Evaluate the model performance on the test set.
 
@@ -217,9 +217,7 @@ class BasicModel:
 
         current_model_uri = f"runs:/{self.run_id}/random-forest-classifier-model"
         model = mlflow.sklearn.load_model(current_model_uri)
-        predictions_current = model.predict(df=X_test).withColumnRenamed(
-            "prediction", "prediction_current"
-        )
+        predictions_current = model.predict(df=X_test).withColumnRenamed("prediction", "prediction_current")
 
         test_set = test_set.select("Id", "Severity_4")
 

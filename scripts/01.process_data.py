@@ -1,10 +1,10 @@
 import yaml
 from loguru import logger
+from marvelous.common import create_parser
 from pyspark.sql import SparkSession
 
 from us_accidents.config import ProjectConfig
 from us_accidents.data_processor import DataProcessor, generate_synthetic_data, generate_test_data
-from marvelous.common import create_parser
 
 args = create_parser()
 
@@ -19,7 +19,7 @@ logger.info(yaml.dump(config, default_flow_style=False))
 # Load the us accidents test set from the catalog
 spark = SparkSession.builder.getOrCreate()
 
-if is_test==0:
+if is_test == 0:
     # Selects random data present in the test set
     # This is mimicking a new data arrival. In real world, this would be a new batch of data.
     # df is passed to infer schema

@@ -1,13 +1,10 @@
-import argparse
-
-import mlflow
 from loguru import logger
+from marvelous.common import create_parser
 from pyspark.dbutils import DBUtils
 from pyspark.sql import SparkSession
 
 from us_accidents.config import ProjectConfig, Tags
 from us_accidents.models.model import BasicModel
-from marvelous.common import create_parser
 
 args = create_parser()
 
@@ -43,7 +40,7 @@ logger.info("Model evaluation completed, model improved: ", model_improved)
 is_test = args.is_test
 
 # when running test, always register and deploy
-if is_test==1:
+if is_test == 1:
     model_improved = True
 
 if model_improved:
