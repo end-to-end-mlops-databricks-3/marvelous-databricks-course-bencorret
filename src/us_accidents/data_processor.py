@@ -1,8 +1,6 @@
 import random
 
 from pyspark.sql import functions as F
-from pyspark.sql.types import NumericType, StringType, BooleanType, TimestampType
-
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import col, current_timestamp, lit, lower, to_utc_timestamp, when
 
@@ -295,13 +293,13 @@ class DataProcessor:
         :param test_set: The test DataFrame to be saved.
         """
         train_set = (train_set
-                                    .withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC"))
-                                    .withColumn("Id", F.monotonically_increasing_id())
-                                    )
+                        .withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC"))
+                        .withColumn("Id", F.monotonically_increasing_id())
+                        )
         test_set = (test_set
-                                    .withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC"))
-                                    .withColumn("Id", F.monotonically_increasing_id())
-                                    )
+                        .withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC"))
+                        .withColumn("Id", F.monotonically_increasing_id())
+                        )
 
         train_set.write.mode(write_mode).saveAsTable(self.training_set_address)
         test_set.write.mode(write_mode).saveAsTable(self.test_set_address)
@@ -321,26 +319,31 @@ class DataProcessor:
             "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
         )
 
-def generate_synthetic_data(df: DataFrame, num_rows: int = 500) -> DataFrame:
+def generate_synthetic_data(spark: SparkSession, config: ProjectConfig, num_rows: int = 500) -> DataFrame:
     """Generate synthetic data matching input DataFrame distributions.
 
-    Creates artificial dataset replicating statistical patterns from source columns including numeric,
-    categorical, and datetime types.
+    Does not generate synthetic data but instead selects a sample fron the test set
 
     :param df: Source DataFrame containing original data distributions
     :param num_rows: Number of synthetic records to generate
     :return: DataFrame containing generated synthetic data
     """
-    spark = df.sparkSession
+    # Select test set
+    df = spark.read.table(f"{config.catalog_name}.{config.schema_name}.test_set")
+
+    # Generate random latitude, to select a random sample of accidents
     rand_start_lat = random.uniform(26, 47)
     rand_start_lat_min = rand_start_lat - 1
     rand_start_lat_max = rand_start_lat + 1
 
-    test_data = spark.read.table("mlops_dev.corretco.test_set")
-    synthetic_data = test_data.filter((test_data.Start_Lat >= rand_start_lat_min) & (test_data.Start_Lat <= rand_start_lat_max))
+    test_data = spark.read.table(df)
+    synthetic_data = (test_data
+                      .filter((test_data.Start_Lat >= rand_start_lat_min) & (test_data.Start_Lat <= rand_start_lat_max))
+                      .limit(num_rows)
+                      )
     
     return synthetic_data
 
-def generate_test_data(df: DataFrame, drift: bool = False, num_rows: int = 100) -> DataFrame:
+def generate_test_data(spark: SparkSession, config: ProjectConfig, num_rows: int = 500) -> DataFrame:
     """Generate test data matching input DataFrame distributions."""
-    return generate_synthetic_data(df, drift, num_rows)
+    return generate_synthetic_data(spark=spark, config=config, num_rows=num_rows)

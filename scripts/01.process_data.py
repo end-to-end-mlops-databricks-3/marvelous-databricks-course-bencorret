@@ -18,18 +18,17 @@ logger.info(yaml.dump(config, default_flow_style=False))
 
 # Load the us accidents test set from the catalog
 spark = SparkSession.builder.getOrCreate()
-df = spark.read.table(f"{config.catalog_name}.{config.schema_name}.test_set")
 
 if is_test==0:
     # Selects random data present in the test set
     # This is mimicking a new data arrival. In real world, this would be a new batch of data.
     # df is passed to infer schema
-    new_data = generate_synthetic_data(df, num_rows=100)
+    new_data = generate_synthetic_data(spark=spark, config=config, num_rows=100)
     logger.info("Synthetic data generated.")
 else:
     # Selects random data present in the test set
     # This is mimicking a new data arrival. This is a valid example for integration testing.
-    new_data = generate_test_data(df, num_rows=100)
+    new_data = generate_test_data(spark=spark, config=config, num_rows=100)
     logger.info("Test data generated.")
 
 # Initialize DataProcessor
