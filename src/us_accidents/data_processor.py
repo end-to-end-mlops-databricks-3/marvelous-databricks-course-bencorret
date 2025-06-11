@@ -335,9 +335,8 @@ def generate_synthetic_data(spark: SparkSession, config: ProjectConfig, num_rows
     rand_start_lat_min = rand_start_lat - 1
     rand_start_lat_max = rand_start_lat + 1
 
-    test_data = spark.read.table(df)
-    synthetic_data = test_data.filter(
-        (test_data.Start_Lat >= rand_start_lat_min) & (test_data.Start_Lat <= rand_start_lat_max)
+    synthetic_data = df.filter(
+        (df.Start_Lat >= rand_start_lat_min) & (df.Start_Lat <= rand_start_lat_max)
     ).limit(num_rows)
 
     return synthetic_data
