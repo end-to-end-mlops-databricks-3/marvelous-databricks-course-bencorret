@@ -1,4 +1,7 @@
 import random
+import pandas as pd
+import numpy as np
+import time
 
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
@@ -53,6 +56,7 @@ class DataProcessor:
             WHERE `Precipitation(in)` IS NOT NULL
             )
             SELECT
+                CAST(`ID` as string) as `ID`,
                 CAST(`Severity` as string) as `Severity`,
                 CAST(`Start_Time` as timestamp) as `Start_Time`,
                 CAST(extract(YEAR FROM CAST(`Start_Time` as timestamp)) as int) as `Year`,
@@ -238,6 +242,7 @@ class DataProcessor:
         # Select correct features
         featurized_df = self.spark.sql("""
             select
+                ID,
                 case when Timezone = 'US/Eastern' then 1 else 0 end as `Timezone_US/Eastern`,
                 case when Timezone = 'US/Mountain' then 1 else 0 end as `Timezone_US/Mountain`,
                 case when Timezone = 'US/Pacific' then 1 else 0 end as `Timezone_US/Pacific`,
@@ -294,9 +299,6 @@ class DataProcessor:
         """
         train_set = train_set.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
-        ).withColumn("Id", F.monotonically_increasing_id())
-        test_set = test_set.withColumn("update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")).withColumn(
-            "Id", F.monotonically_increasing_id()
         )
 
         train_set.write.mode(write_mode).saveAsTable(self.training_set_address)
@@ -318,7 +320,7 @@ class DataProcessor:
         )
 
 
-def generate_synthetic_data(spark: SparkSession, config: ProjectConfig, num_rows: int = 500) -> DataFrame:
+def generate_synthetic_data_v1(spark: SparkSession, config: ProjectConfig, num_rows: int = 500) -> DataFrame:
     """Generate synthetic data matching input DataFrame distributions.
 
     Does not generate synthetic data but instead selects a sample fron the test set
@@ -341,6 +343,85 @@ def generate_synthetic_data(spark: SparkSession, config: ProjectConfig, num_rows
 
     return synthetic_data
 
+def generate_synthetic_data(df: pd.DataFrame, drift: bool = False, num_rows: int = 500) -> pd.DataFrame:
+    """Generate synthetic data matching input DataFrame distributions with optional drift.
+
+    Creates artificial dataset replicating statistical patterns from source columns including numeric,
+    categorical, and datetime types. Supports intentional data drift for specific features when enabled.
+
+    :param df: Source DataFrame containing original data distributions
+    :param drift: Flag to activate synthetic data drift injection
+    :param num_rows: Number of synthetic records to generate
+    :return: DataFrame containing generated synthetic data
+    """
+    synthetic_data = pd.DataFrame()
+
+    for column in df.columns:
+        if column == "Id":
+            continue
+
+        if pd.api.types.is_numeric_dtype(df[column]):
+            if column in {"YearBuilt", "YearRemodAdd"}:  # Handle year-based columns separately
+                synthetic_data[column] = np.random.randint(df[column].min(), df[column].max() + 1, num_rows)
+            else:
+                synthetic_data[column] = np.random.normal(df[column].mean(), df[column].std(), num_rows)
+
+                if column == "SalePrice":
+                    synthetic_data[column] = np.maximum(0, synthetic_data[column])  # Ensure values are non-negative
+
+        elif pd.api.types.is_categorical_dtype(df[column]) or pd.api.types.is_object_dtype(df[column]):
+            synthetic_data[column] = np.random.choice(
+                df[column].unique(), num_rows, p=df[column].value_counts(normalize=True)
+            )
+
+        elif pd.api.types.is_datetime64_any_dtype(df[column]):
+            min_date, max_date = df[column].min(), df[column].max()
+            synthetic_data[column] = pd.to_datetime(
+                np.random.randint(min_date.value, max_date.value, num_rows)
+                if min_date < max_date
+                else [min_date] * num_rows
+            )
+
+        else:
+            synthetic_data[column] = np.random.choice(df[column], num_rows)
+
+    # Convert relevant numeric columns to integers
+    int_columns = {
+        "LotArea",
+        "OverallQual",
+        "OverallCond",
+        "GarageCars",
+        "SalePrice",
+        "YearBuilt",
+        "YearRemodAdd",
+        "TotalBsmtSF",
+        "GrLivArea",
+    }
+    for col in int_columns.intersection(df.columns):
+        synthetic_data[col] = synthetic_data[col].astype(np.int64)
+
+    # Only process columns if they exist in synthetic_data
+    for col in ["LotFrontage", "MasVnrArea", "GarageYrBlt"]:
+        if col in synthetic_data.columns:
+            synthetic_data[col] = pd.to_numeric(synthetic_data[col], errors="coerce")
+            synthetic_data[col] = synthetic_data[col].astype(np.float64)
+
+    timestamp_base = int(time.time() * 1000)
+    synthetic_data["Id"] = [str(timestamp_base + i) for i in range(num_rows)]
+
+    if drift:
+        # Skew the top features to introduce drift
+        top_features = ["OverallQual", "GrLivArea"]  # Select top 2 features
+        for feature in top_features:
+            if feature in synthetic_data.columns:
+                synthetic_data[feature] = synthetic_data[feature] * 2
+
+        # Set YearBuilt to within the last 2 years
+        current_year = pd.Timestamp.now().year
+        if "YearBuilt" in synthetic_data.columns:
+            synthetic_data["YearBuilt"] = np.random.randint(current_year - 2, current_year + 1, num_rows)
+
+    return synthetic_data
 
 def generate_test_data(spark: SparkSession, config: ProjectConfig, num_rows: int = 500) -> DataFrame:
     """Generate test data matching input DataFrame distributions."""

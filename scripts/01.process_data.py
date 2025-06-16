@@ -19,6 +19,10 @@ logger.info(yaml.dump(config, default_flow_style=False))
 # Load the us accidents test set from the catalog
 spark = SparkSession.builder.getOrCreate()
 
+df = spark.read.csv(
+    f"/Volumes/{config.catalog_name}/{config.schema_name}/data/US_Accidents_March23.csv", header=True, inferSchema=True
+).toPandas()
+
 if is_test == 0:
     # Selects random data present in the test set
     # This is mimicking a new data arrival. In real world, this would be a new batch of data.
