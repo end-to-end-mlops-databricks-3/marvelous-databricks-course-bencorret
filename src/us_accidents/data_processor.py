@@ -270,13 +270,13 @@ class DataProcessor:
         """)
 
         # Resample the dataset: over-presence of severity 4 accidents
-        resampled_df = self.resample_data(featurized_df)
+        # resampled_df = self.resample_data(featurized_df)
 
         # Save this dataframe to a UC table
-        resampled_df_with_timestamp = resampled_df.withColumn(
+        clean_df = clean_df.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
-        resampled_df_with_timestamp.write.mode(write_mode).saveAsTable(self.clean_df_address)
+        clean_df.write.mode(write_mode).saveAsTable(self.clean_df_address)
 
     def split_data(self, test_size: float = 0.3, seed: int = 42) -> tuple[DataFrame, DataFrame]:
         """Split the DataFrame (self.clean_df) into training and test sets using PySpark's randomSplit.
