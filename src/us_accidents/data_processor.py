@@ -57,7 +57,7 @@ class DataProcessor:
             )
             SELECT
                 CAST(`ID` as string) as `ID`,
-                CAST(`Severity` as string) as `Severity`,
+                CAST(`Severity` as int) as `Severity`,
                 CAST(`Start_Time` as timestamp) as `Start_Time`,
                 CAST(extract(YEAR FROM CAST(`Start_Time` as timestamp)) as int) as `Year`,
                 CAST(extract(MONTH FROM CAST(`Start_Time` as timestamp)) as int) as `Month`,
@@ -191,8 +191,6 @@ class DataProcessor:
                 "Astronomical_Twilight",
             ]
         )
-        print("clean_df schema:")
-        clean_df.printSchema()
         return clean_df
 
     def resample_data(self, df: DataFrame, resampling_threshold: int = 15000) -> DataFrame:
@@ -204,8 +202,8 @@ class DataProcessor:
         :param resampling_threshold: Resampling threshold.
         """
         # Separate the DataFrame into two based on the "severity_4" column
-        df_true = df.filter("severity_4 = true")
-        df_false = df.filter("severity_4 = false")
+        df_true = df.filter("Severity = 4")
+        df_false = df.filter("Severity <> 4")
 
         # Count the number of rows in each DataFrame
         count_true = df_true.count()
@@ -228,8 +226,6 @@ class DataProcessor:
 
         # Union the sampled DataFrames
         df_resampled = df_true_sampled.union(df_false_sampled)
-        print("df_resampled schema:")
-        df_resampled.printSchema()
         return df_resampled
 
     def preprocess(self, write_mode: str = "append") -> None:
@@ -280,8 +276,6 @@ class DataProcessor:
         final_df = resampled_df.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
-        print("final_df schema:")
-        final_df.printSchema()
         final_df.write.mode(write_mode).saveAsTable(self.clean_df_address)
 
     def split_data(self, test_size: float = 0.3, seed: int = 42) -> tuple[DataFrame, DataFrame]:
@@ -367,12 +361,12 @@ def generate_synthetic_data(df: pd.DataFrame, drift: bool = False, num_rows: int
             continue
 
         if pd.api.types.is_numeric_dtype(df[column]):
-            if column in {"YearBuilt", "YearRemodAdd"}:  # Handle year-based columns separately
+            if column in {"Year", "Month", "Weekday", "Day", "Hour"}:  # Handle year-based columns separately
                 synthetic_data[column] = np.random.randint(df[column].min(), df[column].max() + 1, num_rows)
             else:
                 synthetic_data[column] = np.random.normal(df[column].mean(), df[column].std(), num_rows)
 
-                if column == "SalePrice":
+                if column == "Severity":
                     synthetic_data[column] = np.maximum(0, synthetic_data[column])  # Ensure values are non-negative
 
         elif pd.api.types.is_categorical_dtype(df[column]) or pd.api.types.is_object_dtype(df[column]):
