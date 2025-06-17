@@ -718,3 +718,387 @@ __pydantic_private__: null
 2025-06-17 19:11:17.580 | INFO     | __main__:<module>:2 - Split data
 2025-06-17 19:11:33.605 | INFO     | __main__:<module>:2 - Save train and test sets to catalog
 2025-06-17 19:11:46.017 | INFO     | __main__:<module>:6 - Enable CDF
+2025-06-17 19:26:15.621 | INFO     | __main__:<module>:24 - Configuration loaded:
+2025-06-17 19:26:15.623 | INFO     | __main__:<module>:25 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Timezone
+  - Street
+  - Start_Lat
+  - Start_Lng
+  - Pressure_bc
+  - Astronomical_Twilight_Night
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  endpoint_names:
+    endpoint1: us_accidents_model_serving
+    endpoint2: us_accidents_model_and_feature_serving
+  experiment_name: /Shared/us-accidents-basic
+  model_names:
+    model1: us_accidents_model
+    model2: us_accidents_model_and_feature
+  num_features:
+  - Weekday
+  - Station
+  - Stop
+  - Traffic_Signal
+  parameters:
+    cv: 5
+    max_features:
+    - sqrt
+    n_estimators:
+    - 10
+    - 50
+    - 100
+    n_jobs: 8
+    scoring: f1_macro
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  endpoint_names: null
+  experiment_name: null
+  model_names: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-06-17 19:26:22.481 | INFO     | __main__:<module>:2 - Building Spark Session
+2025-06-17 19:26:22.482 | INFO     | __main__:<module>:5 - Loading raw dataframe
+2025-06-17 19:26:24.450 | INFO     | __main__:<module>:3 - Initialize DataProcessor object
+2025-06-17 19:26:24.451 | INFO     | __main__:<module>:6 - Preprocess data + save table to UC
+2025-06-17 19:28:16.929 | INFO     | __main__:<module>:24 - Configuration loaded:
+2025-06-17 19:28:16.931 | INFO     | __main__:<module>:25 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Timezone
+  - Street
+  - Start_Lat
+  - Start_Lng
+  - Pressure_bc
+  - Astronomical_Twilight_Night
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  endpoint_names:
+    endpoint1: us_accidents_model_serving
+    endpoint2: us_accidents_model_and_feature_serving
+  experiment_name: /Shared/us-accidents-basic
+  model_names:
+    model1: us_accidents_model
+    model2: us_accidents_model_and_feature
+  num_features:
+  - Weekday
+  - Station
+  - Stop
+  - Traffic_Signal
+  parameters:
+    cv: 5
+    max_features:
+    - sqrt
+    n_estimators:
+    - 10
+    - 50
+    - 100
+    n_jobs: 8
+    scoring: f1_macro
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  endpoint_names: null
+  experiment_name: null
+  model_names: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-06-17 19:28:19.913 | INFO     | __main__:<module>:2 - Building Spark Session
+2025-06-17 19:28:19.915 | INFO     | __main__:<module>:5 - Loading raw dataframe
+2025-06-17 19:28:21.702 | INFO     | __main__:<module>:3 - Initialize DataProcessor object
+2025-06-17 19:28:21.703 | INFO     | __main__:<module>:6 - Preprocess data + save table to UC
+2025-06-17 19:30:18.140 | INFO     | __main__:<module>:24 - Configuration loaded:
+2025-06-17 19:30:18.141 | INFO     | __main__:<module>:25 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Timezone
+  - Street
+  - Start_Lat
+  - Start_Lng
+  - Pressure_bc
+  - Astronomical_Twilight_Night
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  endpoint_names:
+    endpoint1: us_accidents_model_serving
+    endpoint2: us_accidents_model_and_feature_serving
+  experiment_name: /Shared/us-accidents-basic
+  model_names:
+    model1: us_accidents_model
+    model2: us_accidents_model_and_feature
+  num_features:
+  - Weekday
+  - Station
+  - Stop
+  - Traffic_Signal
+  parameters:
+    cv: 5
+    max_features:
+    - sqrt
+    n_estimators:
+    - 10
+    - 50
+    - 100
+    n_jobs: 8
+    scoring: f1_macro
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  endpoint_names: null
+  experiment_name: null
+  model_names: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-06-17 19:30:24.660 | INFO     | __main__:<module>:2 - Building Spark Session
+2025-06-17 19:30:24.661 | INFO     | __main__:<module>:5 - Loading raw dataframe
+2025-06-17 19:30:27.249 | INFO     | __main__:<module>:3 - Initialize DataProcessor object
+2025-06-17 19:30:27.250 | INFO     | __main__:<module>:6 - Preprocess data + save table to UC
+2025-06-17 19:31:56.619 | INFO     | __main__:<module>:24 - Configuration loaded:
+2025-06-17 19:31:56.620 | INFO     | __main__:<module>:25 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Timezone
+  - Street
+  - Start_Lat
+  - Start_Lng
+  - Pressure_in
+  - Astronomical_Twilight_Night
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  endpoint_names:
+    endpoint1: us_accidents_model_serving
+    endpoint2: us_accidents_model_and_feature_serving
+  experiment_name: /Shared/us-accidents-basic
+  model_names:
+    model1: us_accidents_model
+    model2: us_accidents_model_and_feature
+  num_features:
+  - Weekday
+  - Station
+  - Stop
+  - Traffic_Signal
+  parameters:
+    cv: 5
+    max_features:
+    - sqrt
+    n_estimators:
+    - 10
+    - 50
+    - 100
+    n_jobs: 8
+    scoring: f1_macro
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  endpoint_names: null
+  experiment_name: null
+  model_names: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-06-17 19:32:04.830 | INFO     | __main__:<module>:2 - Building Spark Session
+2025-06-17 19:32:04.838 | INFO     | __main__:<module>:5 - Loading raw dataframe
+2025-06-17 19:32:07.254 | INFO     | __main__:<module>:3 - Initialize DataProcessor object
+2025-06-17 19:32:07.256 | INFO     | __main__:<module>:6 - Preprocess data + save table to UC
+2025-06-17 19:32:35.342 | INFO     | __main__:<module>:24 - Configuration loaded:
+2025-06-17 19:32:35.344 | INFO     | __main__:<module>:25 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Timezone
+  - Street
+  - Start_Lat
+  - Start_Lng
+  - Pressure_in
+  - Astronomical_Twilight_Night
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  endpoint_names:
+    endpoint1: us_accidents_model_serving
+    endpoint2: us_accidents_model_and_feature_serving
+  experiment_name: /Shared/us-accidents-basic
+  model_names:
+    model1: us_accidents_model
+    model2: us_accidents_model_and_feature
+  num_features:
+  - Weekday
+  - Station
+  - Stop
+  - Traffic_Signal
+  parameters:
+    cv: 5
+    max_features:
+    - sqrt
+    n_estimators:
+    - 10
+    - 50
+    - 100
+    n_jobs: 8
+    scoring: f1_macro
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  endpoint_names: null
+  experiment_name: null
+  model_names: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-06-17 19:32:39.599 | INFO     | __main__:<module>:2 - Building Spark Session
+2025-06-17 19:32:39.601 | INFO     | __main__:<module>:5 - Loading raw dataframe
+2025-06-17 19:32:43.445 | INFO     | __main__:<module>:3 - Initialize DataProcessor object
+2025-06-17 19:32:43.446 | INFO     | __main__:<module>:6 - Preprocess data + save table to UC
+2025-06-17 19:33:47.230 | INFO     | __main__:<module>:24 - Configuration loaded:
+2025-06-17 19:33:47.231 | INFO     | __main__:<module>:25 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Timezone
+  - Street
+  - Start_Lat
+  - Start_Lng
+  - Pressure_in
+  - Astronomical_Twilight
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  endpoint_names:
+    endpoint1: us_accidents_model_serving
+    endpoint2: us_accidents_model_and_feature_serving
+  experiment_name: /Shared/us-accidents-basic
+  model_names:
+    model1: us_accidents_model
+    model2: us_accidents_model_and_feature
+  num_features:
+  - Weekday
+  - Station
+  - Stop
+  - Traffic_Signal
+  parameters:
+    cv: 5
+    max_features:
+    - sqrt
+    n_estimators:
+    - 10
+    - 50
+    - 100
+    n_jobs: 8
+    scoring: f1_macro
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  endpoint_names: null
+  experiment_name: null
+  model_names: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-06-17 19:33:53.304 | INFO     | __main__:<module>:2 - Building Spark Session
+2025-06-17 19:33:53.307 | INFO     | __main__:<module>:5 - Loading raw dataframe
+2025-06-17 19:33:55.903 | INFO     | __main__:<module>:3 - Initialize DataProcessor object
+2025-06-17 19:33:55.904 | INFO     | __main__:<module>:6 - Preprocess data + save table to UC
+2025-06-17 19:39:27.702 | INFO     | __main__:<module>:2 - Split data
+2025-06-17 19:39:31.103 | INFO     | __main__:<module>:2 - Save train and test sets to catalog
+2025-06-17 19:39:41.778 | INFO     | __main__:<module>:6 - Enable CDF
+2025-06-17 19:40:44.606 | INFO     | __main__:<module>:24 - Configuration loaded:
+2025-06-17 19:40:44.608 | INFO     | __main__:<module>:25 - !!python/object:us_accidents.config.ProjectConfig
+__dict__:
+  cat_features:
+  - Timezone
+  - Street
+  - Start_Lat
+  - Start_Lng
+  - Pressure_in
+  - Astronomical_Twilight
+  catalog_name: mlops_dev
+  cleaned_table_name: us_accidents_cleaned
+  endpoint_names:
+    endpoint1: us_accidents_model_serving
+    endpoint2: us_accidents_model_and_feature_serving
+  experiment_name: /Shared/us-accidents-basic
+  model_names:
+    model1: us_accidents_model
+    model2: us_accidents_model_and_feature
+  num_features:
+  - Weekday
+  - Station
+  - Stop
+  - Traffic_Signal
+  parameters:
+    cv: 5
+    max_features:
+    - sqrt
+    n_estimators:
+    - 10
+    - 50
+    - 100
+    n_jobs: 8
+    scoring: f1_macro
+  schema_name: corretco
+  target: Severity
+__pydantic_extra__: null
+__pydantic_fields_set__: !!set
+  cat_features: null
+  catalog_name: null
+  cleaned_table_name: null
+  endpoint_names: null
+  experiment_name: null
+  model_names: null
+  num_features: null
+  parameters: null
+  schema_name: null
+  target: null
+__pydantic_private__: null
+
+2025-06-17 19:41:05.118 | INFO     | __main__:<module>:2 - Building Spark Session
+2025-06-17 19:41:05.119 | INFO     | __main__:<module>:5 - Loading raw dataframe
+2025-06-17 19:41:08.243 | INFO     | __main__:<module>:3 - Initialize DataProcessor object
+2025-06-17 19:41:08.244 | INFO     | __main__:<module>:6 - Preprocess data + save table to UC
+2025-06-17 19:42:09.166 | INFO     | __main__:<module>:2 - Split data
+2025-06-17 19:42:12.419 | INFO     | __main__:<module>:2 - Save train and test sets to catalog
+2025-06-17 19:42:21.446 | INFO     | __main__:<module>:6 - Enable CDF

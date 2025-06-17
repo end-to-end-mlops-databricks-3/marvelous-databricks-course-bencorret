@@ -27,12 +27,12 @@ if is_test == 0:
     # Selects random data present in the test set
     # This is mimicking a new data arrival. In real world, this would be a new batch of data.
     # df is passed to infer schema
-    new_data = generate_synthetic_data(df=df, drift=False, num_rows=500)
+    new_data = generate_synthetic_data(df, num_rows=500)
     logger.info("Synthetic data generated.")
 else:
     # Selects random data present in the test set
     # This is mimicking a new data arrival. This is a valid example for integration testing.
-    new_data = generate_test_data(df=df, drift=False, num_rows=500)
+    new_data = generate_test_data(df, num_rows=500)
     logger.info("Test data generated.")
 
 # Initialize DataProcessor
@@ -48,4 +48,4 @@ logger.info("Test set shape: %s", X_test.shape)
 
 # Save to catalog
 logger.info("Saving data to catalog")
-data_processor.save_to_catalog(X_train, X_test)
+data_processor.save_to_catalog(train_set=X_train, test_set=X_test, write_mode="append")

@@ -237,37 +237,13 @@ class DataProcessor:
         3. Saves the cleaned DataFrame to a Delta table in the specified catalog and schema.
         """
         clean_df = self.clean_raw_data()
-        clean_df.createOrReplaceTempView("cleaned_accidents")
 
         # Select correct features
-        featurized_df = self.spark.sql("""
-            select
-                ID,
-                case when Timezone = 'US/Eastern' then 1 else 0 end as `Timezone_US/Eastern`,
-                case when Timezone = 'US/Mountain' then 1 else 0 end as `Timezone_US/Mountain`,
-                case when Timezone = 'US/Pacific' then 1 else 0 end as `Timezone_US/Pacific`,
-                case when Weekday = 1 then 1 else 0 end as `Weekday_1`,
-                case when Weekday = 2 then 1 else 0 end as `Weekday_2`,
-                case when Weekday = 3 then 1 else 0 end as `Weekday_3`,
-                case when Weekday = 4 then 1 else 0 end as `Weekday_4`,
-                case when Weekday = 5 then 1 else 0 end as `Weekday_5`,
-                case when Weekday = 6 then 1 else 0 end as `Weekday_6`,
-                cast(Station as int) as Station,
-                cast(Stop as int) as Stop,
-                cast(Traffic_Signal as int) as Traffic_Signal,
-                case when Severity = 4 then 1 else 0 end as `Severity_4`,
-                case when contains(Street, 'Rd ') then 1 else 0 end as `Rd`,
-                case when contains(Street, 'St ') then 1 else 0 end as `St`,
-                case when contains(Street, 'Dr ') then 1 else 0 end as `Dr`,
-                case when contains(Street, 'Ave ') then 1 else 0 end as `Ave`,
-                case when contains(Street, 'Blvd ') then 1 else 0 end as `Blvd`,
-                case when contains(Street, 'I- ') then 1 else 0 end as `I-`,
-                case when Astronomical_Twilight = 'Night' then 1 else 0 end as Astronomical_Twilight_Night,
-                Start_Lat,
-                Start_Lng,
-                Pressure_in as Pressure_bc
-            from cleaned_accidents
-        """)
+        cat_features = self.config.cat_features
+        num_features = self.config.num_features
+        target = self.config.target
+        relevant_columns = cat_features + num_features + [target] + ["ID"]
+        clean_df = clean_df.select([col for col in relevant_columns])
 
         # Resample the dataset: over-presence of severity 4 accidents
         resampled_df = self.resample_data(clean_df)
@@ -319,30 +295,6 @@ class DataProcessor:
             "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
         )
 
-
-def generate_synthetic_data_v1(spark: SparkSession, config: ProjectConfig, num_rows: int = 500) -> DataFrame:
-    """Generate synthetic data matching input DataFrame distributions.
-
-    Does not generate synthetic data but instead selects a sample fron the test set
-
-    :param df: Source DataFrame containing original data distributions
-    :param num_rows: Number of synthetic records to generate
-    :return: DataFrame containing generated synthetic data
-    """
-    # Select test set
-    df = spark.read.table(f"{config.catalog_name}.{config.schema_name}.test_set")
-
-    # Generate random latitude, to select a random sample of accidents
-    rand_start_lat = random.uniform(26, 47)
-    rand_start_lat_min = rand_start_lat - 1
-    rand_start_lat_max = rand_start_lat + 1
-
-    synthetic_data = df.filter(
-        (df.Start_Lat >= rand_start_lat_min) & (df.Start_Lat <= rand_start_lat_max)
-    ).limit(num_rows)
-
-    return synthetic_data
-
 def generate_synthetic_data(df: pd.DataFrame, drift: bool = False, num_rows: int = 500) -> pd.DataFrame:
     """Generate synthetic data matching input DataFrame distributions with optional drift.
 
@@ -387,28 +339,27 @@ def generate_synthetic_data(df: pd.DataFrame, drift: bool = False, num_rows: int
 
     # Convert relevant numeric columns to integers
     int_columns = {
-        "LotArea",
-        "OverallQual",
-        "OverallCond",
-        "GarageCars",
-        "SalePrice",
-        "YearBuilt",
-        "YearRemodAdd",
-        "TotalBsmtSF",
-        "GrLivArea",
+        "Weekday",
+        "Severity"
     }
     for col in int_columns.intersection(df.columns):
         synthetic_data[col] = synthetic_data[col].astype(np.int64)
 
     # Only process columns if they exist in synthetic_data
-    for col in ["LotFrontage", "MasVnrArea", "GarageYrBlt"]:
+    decimal_columns = [
+        "Start_Lat",
+        "Start_Lng",
+        "Pressure_in"
+    ]
+    for col in decimal_columns:
         if col in synthetic_data.columns:
             synthetic_data[col] = pd.to_numeric(synthetic_data[col], errors="coerce")
             synthetic_data[col] = synthetic_data[col].astype(np.float64)
 
     timestamp_base = int(time.time() * 1000)
-    synthetic_data["Id"] = [str(timestamp_base + i) for i in range(num_rows)]
+    synthetic_data["ID"] = [str(timestamp_base + i) for i in range(num_rows)]
 
+    # Drift probably won't be used in my project ... leaving a trace here, for later reference
     if drift:
         # Skew the top features to introduce drift
         top_features = ["OverallQual", "GrLivArea"]  # Select top 2 features
@@ -421,8 +372,12 @@ def generate_synthetic_data(df: pd.DataFrame, drift: bool = False, num_rows: int
         if "YearBuilt" in synthetic_data.columns:
             synthetic_data["YearBuilt"] = np.random.randint(current_year - 2, current_year + 1, num_rows)
 
+    print(synthetic_data.info())
+    print(synthetic_data.shape)
+
     return synthetic_data
 
-def generate_test_data(spark: SparkSession, config: ProjectConfig, num_rows: int = 500) -> DataFrame:
-    """Generate test data matching input DataFrame distributions."""
-    return generate_synthetic_data(spark=spark, config=config, num_rows=num_rows)
+def generate_test_data(df: pd.DataFrame, drift: bool = False, num_rows: int = 500) -> pd.DataFrame:
+    """Generate test data matching input DataFrame distributions with optional drift."""
+    return generate_synthetic_data(df, drift, num_rows)
+

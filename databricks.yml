@@ -154,7 +154,7 @@ resources:
 
 targets:
   dev:
-    cluster_id: 0518-183709-jmp00moq
+    cluster_id: 0616-201021-1gl4rngd
     default: true
     mode: development
     workspace:
