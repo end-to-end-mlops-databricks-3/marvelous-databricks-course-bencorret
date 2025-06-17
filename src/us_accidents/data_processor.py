@@ -191,6 +191,8 @@ class DataProcessor:
                 "Astronomical_Twilight",
             ]
         )
+        print("clean_df schema:")
+        clean_df.printSchema()
         return clean_df
 
     def resample_data(self, df: DataFrame, resampling_threshold: int = 15000) -> DataFrame:
@@ -226,6 +228,8 @@ class DataProcessor:
 
         # Union the sampled DataFrames
         df_resampled = df_true_sampled.union(df_false_sampled)
+        print("df_resampled schema:")
+        df_resampled.printSchema()
         return df_resampled
 
     def preprocess(self, write_mode: str = "append") -> None:
@@ -270,13 +274,15 @@ class DataProcessor:
         """)
 
         # Resample the dataset: over-presence of severity 4 accidents
-        # resampled_df = self.resample_data(featurized_df)
+        resampled_df = self.resample_data(clean_df)
 
         # Save this dataframe to a UC table
-        clean_df = clean_df.withColumn(
+        final_df = resampled_df.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
-        clean_df.write.mode(write_mode).saveAsTable(self.clean_df_address)
+        print("final_df schema:")
+        final_df.printSchema()
+        final_df.write.mode(write_mode).saveAsTable(self.clean_df_address)
 
     def split_data(self, test_size: float = 0.3, seed: int = 42) -> tuple[DataFrame, DataFrame]:
         """Split the DataFrame (self.clean_df) into training and test sets using PySpark's randomSplit.
