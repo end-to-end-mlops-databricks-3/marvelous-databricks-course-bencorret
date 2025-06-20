@@ -323,7 +323,7 @@ def generate_synthetic_data(df: pd.DataFrame, drift: bool = False, num_rows: int
 
         elif pd.api.types.is_categorical_dtype(df[column]) or pd.api.types.is_object_dtype(df[column]):
             synthetic_data[column] = np.random.choice(
-                df[column].unique(), num_rows, p=df[column].value_counts(normalize=True)
+                df[column].unique(), num_rows
             )
 
         elif pd.api.types.is_datetime64_any_dtype(df[column]):
