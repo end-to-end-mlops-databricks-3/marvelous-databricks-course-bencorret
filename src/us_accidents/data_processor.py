@@ -193,7 +193,7 @@ class DataProcessor:
         )
         return clean_df
 
-    def resample_data(self, df: DataFrame, resampling_threshold: int = 15000) -> DataFrame:
+    def resample_data(self, df: DataFrame, resampling_threshold: int = 200000) -> DataFrame:
         """Resample the cleaned dataset.
 
         Severity type 4 accident are overwhelmingly present in the dataset.
@@ -228,7 +228,7 @@ class DataProcessor:
         df_resampled = df_true_sampled.union(df_false_sampled)
         return df_resampled
 
-    def preprocess(self, write_mode: str = "append") -> None:
+    def preprocess(self, write_mode: str = "overwrite") -> None:
         """Complete the preprocessing.
 
         This method performs the following steps:
@@ -372,6 +372,8 @@ def generate_synthetic_data(df: pd.DataFrame, drift: bool = False, num_rows: int
         if "YearBuilt" in synthetic_data.columns:
             synthetic_data["YearBuilt"] = np.random.randint(current_year - 2, current_year + 1, num_rows)
 
+    # Force the limit on the number of rows
+    synthetic_data = df.iloc[:num_rows]
     return synthetic_data
 
 def generate_test_data(df: pd.DataFrame, drift: bool = False, num_rows: int = 500) -> pd.DataFrame:
