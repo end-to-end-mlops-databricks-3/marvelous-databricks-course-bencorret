@@ -372,9 +372,6 @@ def generate_synthetic_data(df: pd.DataFrame, drift: bool = False, num_rows: int
         if "YearBuilt" in synthetic_data.columns:
             synthetic_data["YearBuilt"] = np.random.randint(current_year - 2, current_year + 1, num_rows)
 
-    print(synthetic_data.info())
-    print(synthetic_data.shape)
-
     return synthetic_data
 
 def generate_test_data(df: pd.DataFrame, drift: bool = False, num_rows: int = 500) -> pd.DataFrame:

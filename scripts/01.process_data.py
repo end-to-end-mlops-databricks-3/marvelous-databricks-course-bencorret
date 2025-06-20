@@ -27,12 +27,14 @@ if is_test == 0:
     # Selects random data present in the test set
     # This is mimicking a new data arrival. In real world, this would be a new batch of data.
     # df is passed to infer schema
-    new_data = generate_synthetic_data(df, num_rows=500)
+    new_data_pandas = generate_synthetic_data(df, num_rows=500)
+    new_data = spark.createDataFrame(new_data_pandas)
     logger.info("Synthetic data generated.")
 else:
     # Selects random data present in the test set
     # This is mimicking a new data arrival. This is a valid example for integration testing.
-    new_data = generate_test_data(df, num_rows=500)
+    new_data_pandas = generate_test_data(df, num_rows=500)
+    new_data = spark.createDataFrame(new_data_pandas)
     logger.info("Test data generated.")
 
 # Initialize DataProcessor
@@ -43,8 +45,8 @@ data_processor.preprocess()
 
 # Split the data
 X_train, X_test = data_processor.split_data()
-logger.info("Training set shape: %s", X_train.shape)
-logger.info("Test set shape: %s", X_test.shape)
+logger.info("Training set shape: %s", X_train.printSchema())
+logger.info("Test set shape: %s", X_test.printSchema())
 
 # Save to catalog
 logger.info("Saving data to catalog")
