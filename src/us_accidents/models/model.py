@@ -17,7 +17,8 @@ from loguru import logger
 from mlflow import MlflowClient
 from mlflow.data.dataset_source import DatasetSource
 from mlflow.models import infer_signature
-from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import functions as F
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV
@@ -200,3 +201,46 @@ class BasicModel:
 
         # Return predictions as a DataFrame
         return predictions
+
+    def model_improved(self, test_set: DataFrame) -> bool:
+        """Evaluate the model performance on the test set.
+
+        Compares the current model with the latest registered model using MAE.
+        :param test_set: DataFrame containing the test data.
+        :return: True if the current model performs better, False otherwise.
+        """
+        X_test = test_set.drop(self.config.target)
+
+        predictions_latest = self.load_latest_model_and_predict(X_test).withColumnRenamed(
+            "prediction", "prediction_latest"
+        )
+
+        current_model_uri = f"runs:/{self.run_id}/random-forest-classifier-model"
+        model = mlflow.sklearn.load_model(current_model_uri)
+        predictions_current = model.predict(df=X_test).withColumnRenamed("prediction", "prediction_current")
+
+        test_set = test_set.select("Id", "Severity_4")
+
+        logger.info("Predictions are ready.")
+
+        # Join the DataFrames on the 'id' column
+        df = test_set.join(predictions_current, on="Id").join(predictions_latest, on="Id")
+
+        # Calculate the absolute error for each model
+        df = df.withColumn("error_current", F.abs(df["Severity_4"] - df["prediction_current"]))
+        df = df.withColumn("error_latest", F.abs(df["Severity_4"] - df["prediction_latest"]))
+
+        # Calculate the Mean Absolute Error (MAE) for each model
+        mae_current = df.agg(F.mean("error_current")).collect()[0][0]
+        mae_latest = df.agg(F.mean("error_latest")).collect()[0][0]
+
+        # Compare models based on MAE
+        logger.info(f"MAE for Current Model: {mae_current}")
+        logger.info(f"MAE for Latest Model: {mae_latest}")
+
+        if mae_current < mae_latest:
+            logger.info("Current Model performs better.")
+            return True
+        else:
+            logger.info("New Model performs worse.")
+            return False

@@ -1,4 +1,10 @@
+import random
+import pandas as pd
+import numpy as np
+import time
+
 from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import functions as F
 from pyspark.sql.functions import col, current_timestamp, lit, lower, to_utc_timestamp, when
 
 from us_accidents.config import ProjectConfig
@@ -10,7 +16,7 @@ class DataProcessor:
     This class handles data preprocessing, splitting, and saving to Databricks tables.
     """
 
-    def __init__(self, spark: SparkSession, config: ProjectConfig, dataframe: DataFrame) -> None:
+    def __init__(self, dataframe: DataFrame, config: ProjectConfig, spark: SparkSession) -> None:
         """Initialize the DataProcessor with a Spark session, configuration, and DataFrame.
 
         :param spark: Spark session to be used for DataFrame operations.
@@ -50,7 +56,8 @@ class DataProcessor:
             WHERE `Precipitation(in)` IS NOT NULL
             )
             SELECT
-                CAST(`Severity` as string) as `Severity`,
+                CAST(`ID` as string) as `ID`,
+                CAST(`Severity` as int) as `Severity`,
                 CAST(`Start_Time` as timestamp) as `Start_Time`,
                 CAST(extract(YEAR FROM CAST(`Start_Time` as timestamp)) as int) as `Year`,
                 CAST(extract(MONTH FROM CAST(`Start_Time` as timestamp)) as int) as `Month`,
@@ -186,7 +193,7 @@ class DataProcessor:
         )
         return clean_df
 
-    def resample_data(self, df: DataFrame, resampling_threshold: int = 15000) -> DataFrame:
+    def resample_data(self, df: DataFrame, resampling_threshold: int = 200000) -> DataFrame:
         """Resample the cleaned dataset.
 
         Severity type 4 accident are overwhelmingly present in the dataset.
@@ -195,8 +202,8 @@ class DataProcessor:
         :param resampling_threshold: Resampling threshold.
         """
         # Separate the DataFrame into two based on the "severity_4" column
-        df_true = df.filter("severity_4 = true")
-        df_false = df.filter("severity_4 = false")
+        df_true = df.filter("Severity = 4")
+        df_false = df.filter("Severity <> 4")
 
         # Count the number of rows in each DataFrame
         count_true = df_true.count()
@@ -221,7 +228,7 @@ class DataProcessor:
         df_resampled = df_true_sampled.union(df_false_sampled)
         return df_resampled
 
-    def preprocess(self) -> None:
+    def preprocess(self, write_mode: str = "overwrite") -> None:
         """Complete the preprocessing.
 
         This method performs the following steps:
@@ -230,45 +237,22 @@ class DataProcessor:
         3. Saves the cleaned DataFrame to a Delta table in the specified catalog and schema.
         """
         clean_df = self.clean_raw_data()
-        clean_df.createOrReplaceTempView("cleaned_accidents")
 
         # Select correct features
-        featurized_df = self.spark.sql("""
-            select
-                case when Timezone = 'US/Eastern' then 1 else 0 end as `Timezone_US/Eastern`,
-                case when Timezone = 'US/Mountain' then 1 else 0 end as `Timezone_US/Mountain`,
-                case when Timezone = 'US/Pacific' then 1 else 0 end as `Timezone_US/Pacific`,
-                case when Weekday = 1 then 1 else 0 end as `Weekday_1`,
-                case when Weekday = 2 then 1 else 0 end as `Weekday_2`,
-                case when Weekday = 3 then 1 else 0 end as `Weekday_3`,
-                case when Weekday = 4 then 1 else 0 end as `Weekday_4`,
-                case when Weekday = 5 then 1 else 0 end as `Weekday_5`,
-                case when Weekday = 6 then 1 else 0 end as `Weekday_6`,
-                cast(Station as int) as Station,
-                cast(Stop as int) as Stop,
-                cast(Traffic_Signal as int) as Traffic_Signal,
-                case when Severity = 4 then 1 else 0 end as `Severity_4`,
-                case when contains(Street, 'Rd ') then 1 else 0 end as `Rd`,
-                case when contains(Street, 'St ') then 1 else 0 end as `St`,
-                case when contains(Street, 'Dr ') then 1 else 0 end as `Dr`,
-                case when contains(Street, 'Ave ') then 1 else 0 end as `Ave`,
-                case when contains(Street, 'Blvd ') then 1 else 0 end as `Blvd`,
-                case when contains(Street, 'I- ') then 1 else 0 end as `I-`,
-                case when Astronomical_Twilight = 'Night' then 1 else 0 end as Astronomical_Twilight_Night,
-                Start_Lat,
-                Start_Lng,
-                Pressure_in as Pressure_bc
-            from cleaned_accidents
-        """)
+        cat_features = self.config.cat_features
+        num_features = self.config.num_features
+        target = self.config.target
+        relevant_columns = cat_features + num_features + [target] + ["ID"]
+        clean_df = clean_df.select([col for col in relevant_columns])
 
         # Resample the dataset: over-presence of severity 4 accidents
-        resampled_df = self.resample_data(featurized_df)
+        resampled_df = self.resample_data(clean_df)
 
         # Save this dataframe to a UC table
-        resampled_df_with_timestamp = resampled_df.withColumn(
+        final_df = resampled_df.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
-        resampled_df_with_timestamp.write.mode("overwrite").saveAsTable(self.clean_df_address)
+        final_df.write.mode(write_mode).saveAsTable(self.clean_df_address)
 
     def split_data(self, test_size: float = 0.3, seed: int = 42) -> tuple[DataFrame, DataFrame]:
         """Split the DataFrame (self.clean_df) into training and test sets using PySpark's randomSplit.
@@ -283,21 +267,18 @@ class DataProcessor:
         train_df, test_df = cleaned_table.randomSplit([train_size, test_size], seed=seed)
         return train_df, test_df
 
-    def save_to_catalog(self, train_set: DataFrame, test_set: DataFrame) -> None:
+    def save_to_catalog(self, train_set: DataFrame, test_set: DataFrame, write_mode: str = "append") -> None:
         """Save the train and test sets into Databricks tables.
 
         :param train_set: The training DataFrame to be saved.
         :param test_set: The test DataFrame to be saved.
         """
-        train_set_with_timestamp = train_set.withColumn(
-            "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
-        )
-        test_set_with_timestamp = test_set.withColumn(
+        train_set = train_set.withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
 
-        train_set_with_timestamp.write.mode("overwrite").saveAsTable(self.training_set_address)
-        test_set_with_timestamp.write.mode("overwrite").saveAsTable(self.test_set_address)
+        train_set.write.mode(write_mode).saveAsTable(self.training_set_address)
+        test_set.write.mode(write_mode).saveAsTable(self.test_set_address)
 
     def enable_change_data_feed(self) -> None:
         """Enable Change Data Feed for train and test set tables.
@@ -313,3 +294,89 @@ class DataProcessor:
             f"ALTER TABLE {self.config.catalog_name}.{self.config.schema_name}.test_set "
             "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
         )
+
+def generate_synthetic_data(df: pd.DataFrame, drift: bool = False, num_rows: int = 500) -> pd.DataFrame:
+    """Generate synthetic data matching input DataFrame distributions with optional drift.
+
+    Creates artificial dataset replicating statistical patterns from source columns including numeric,
+    categorical, and datetime types. Supports intentional data drift for specific features when enabled.
+
+    :param df: Source DataFrame containing original data distributions
+    :param drift: Flag to activate synthetic data drift injection
+    :param num_rows: Number of synthetic records to generate
+    :return: DataFrame containing generated synthetic data
+    """
+    synthetic_data = pd.DataFrame()
+
+    for column in df.columns:
+        if column == "Id":
+            continue
+
+        if pd.api.types.is_numeric_dtype(df[column]):
+            if column in {"Year", "Month", "Weekday", "Day", "Hour"}:  # Handle year-based columns separately
+                synthetic_data[column] = np.random.randint(df[column].min(), df[column].max() + 1, num_rows)
+            else:
+                synthetic_data[column] = np.random.normal(df[column].mean(), df[column].std(), num_rows)
+
+                if column == "Severity":
+                    synthetic_data[column] = np.maximum(0, synthetic_data[column])  # Ensure values are non-negative
+
+        elif pd.api.types.is_categorical_dtype(df[column]) or pd.api.types.is_object_dtype(df[column]):
+            synthetic_data[column] = np.random.choice(
+                df[column].unique(), num_rows
+            )
+
+        elif pd.api.types.is_datetime64_any_dtype(df[column]):
+            min_date, max_date = df[column].min(), df[column].max()
+            synthetic_data[column] = pd.to_datetime(
+                np.random.randint(min_date.value, max_date.value, num_rows)
+                if min_date < max_date
+                else [min_date] * num_rows
+            )
+
+        else:
+            synthetic_data[column] = np.random.choice(df[column], num_rows)
+
+    # Convert relevant numeric columns to integers
+    int_columns = {
+        "Weekday",
+        "Severity"
+    }
+    for col in int_columns.intersection(df.columns):
+        synthetic_data[col] = synthetic_data[col].astype(np.int64)
+
+    # Only process columns if they exist in synthetic_data
+    decimal_columns = [
+        "Start_Lat",
+        "Start_Lng",
+        "Pressure_in"
+    ]
+    for col in decimal_columns:
+        if col in synthetic_data.columns:
+            synthetic_data[col] = pd.to_numeric(synthetic_data[col], errors="coerce")
+            synthetic_data[col] = synthetic_data[col].astype(np.float64)
+
+    timestamp_base = int(time.time() * 1000)
+    synthetic_data["ID"] = [str(timestamp_base + i) for i in range(num_rows)]
+
+    # Drift probably won't be used in my project ... leaving a trace here, for later reference
+    if drift:
+        # Skew the top features to introduce drift
+        top_features = ["OverallQual", "GrLivArea"]  # Select top 2 features
+        for feature in top_features:
+            if feature in synthetic_data.columns:
+                synthetic_data[feature] = synthetic_data[feature] * 2
+
+        # Set YearBuilt to within the last 2 years
+        current_year = pd.Timestamp.now().year
+        if "YearBuilt" in synthetic_data.columns:
+            synthetic_data["YearBuilt"] = np.random.randint(current_year - 2, current_year + 1, num_rows)
+
+    # Force the limit on the number of rows
+    synthetic_data = df.iloc[:num_rows]
+    return synthetic_data
+
+def generate_test_data(df: pd.DataFrame, drift: bool = False, num_rows: int = 500) -> pd.DataFrame:
+    """Generate test data matching input DataFrame distributions with optional drift."""
+    return generate_synthetic_data(df, drift, num_rows)
+

@@ -3,11 +3,11 @@
 
 # COMMAND ----------
 
-# %pip install -e ..
+# MAGIC %pip install -e ..
 
 # COMMAND ----------
 
-# %restart_python
+# MAGIC %restart_python
 
 # COMMAND ----------
 
@@ -43,7 +43,7 @@ logger.info(yaml.dump(config, default_flow_style=False))
 # Define impoprtant variables
 catalog_name = config.catalog_name
 schema_name = config.schema_name
-data_file_path = f"/Volumes/{catalog_name}/{schema_name}/data/US_Accidents_March23_short.csv"
+data_file_path = f"/Volumes/{catalog_name}/{schema_name}/data/US_Accidents_March23.csv"
 
 # COMMAND ----------
 
@@ -62,7 +62,7 @@ with Timer() as preprocess_timer:
     data_processor = DataProcessor(spark=spark, config=config, dataframe=raw_df)
 
     logger.info("Preprocess data + save table to UC")
-    data_processor.preprocess()
+    data_processor.preprocess(write_mode="overwrite")
 
 
 # COMMAND ----------
@@ -76,7 +76,7 @@ X_train, X_test = data_processor.split_data()
 
 # Save to catalog
 logger.info("Save train and test sets to catalog")
-data_processor.save_to_catalog(X_train, X_test)
+data_processor.save_to_catalog(X_train, X_test, write_mode="overwrite")
 
 # Enable change data feed (only once!)
 logger.info("Enable CDF")

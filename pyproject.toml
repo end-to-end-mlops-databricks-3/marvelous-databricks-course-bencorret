@@ -1,6 +1,6 @@
 [project]
-name = "us_accidents"
-description = "US accidents severity prediction"
+name = "us-accidents"
+description = "Car accidents severity in the US"
 requires-python = ">=3.11, <3.12"
 dependencies = [
     "mlflow==2.17.0",
@@ -20,7 +20,6 @@ dependencies = [
     "pydantic==2.9.2",
     "loguru==0.7.3",
     "python-dotenv>=1.1.0",
-    "marvelous@git+https://github.com/end-to-end-mlops-databricks-3/marvelous@0.1.0",
 ]
 
 dynamic = ['version']
@@ -31,7 +30,7 @@ dev = ["databricks-connect==15.4.5",
        "pip>=24.2",
        "pre-commit>=4.1.0, <5",
        "pytest>=8.3.4, <9",
-       "pytest>=8.3.4, <9",
+       "marvelous@git+https://github.com/end-to-end-mlops-databricks-3/marvelous@0.3.1",
     ]
 
 test = [
@@ -40,7 +39,8 @@ test = [
     "pyspark==3.5.5",
     "pytest>=8.3.5",
     "pytest-cov >=6.1.0",
-    "pydantic-settings>=2.8.1"
+    "pydantic-settings>=2.8.1",
+    "marvelous@git+https://github.com/end-to-end-mlops-databricks-3/marvelous@0.3.1",
 ]
 
 [build-system]
@@ -49,7 +49,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where =["src"]
-include = ["house_price*"]
+include = ["us_accidents*"]
 
 
 [tool.setuptools.dynamic]
@@ -58,9 +58,10 @@ version = { file = "version.txt" }
 [tool.pytest.ini_options]
 testpaths = [ "tests" ]
 pythonpath = [ "." ]
+markers = [
+    "ci_exclude: Tests excluded from CI/CD pipeline"
+]
 
-# [lint.pydocstyle]
-# convention = "sphinx"
 
 [tool.ruff]
 line-length = 120

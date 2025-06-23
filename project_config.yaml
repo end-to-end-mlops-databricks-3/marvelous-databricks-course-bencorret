@@ -28,30 +28,17 @@ parameters:
   scoring: f1_macro
 
 num_features:
-  - Timezone_US/Eastern
-  - Timezone_US/Mountain
-  - Timezone_US/Pacific
-  - Weekday_1
-  - Weekday_2
-  - Weekday_3
-  - Weekday_4
-  - Weekday_5
-  - Weekday_6
+  - Weekday
   - Station
   - Stop
   - Traffic_Signal
-  - Severity_4
-  - Rd
-  - St
-  - Dr
-  - Ave
-  - Blvd
-  - I-
-  - Astronomical_Twilight_Night
 
 cat_features:
+  - Timezone
+  - Street
   - Start_Lat
   - Start_Lng
-  - Pressure_bc
+  - Pressure_in
+  - Astronomical_Twilight
 
-target: Severity_4
+target: Severity
